@@ -1,7 +1,7 @@
 import socket
 
 HOST = '127.0.0.1'
-PORT = 8888
+PORT = 1234
 BUFFER_SIZE = 1024
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
