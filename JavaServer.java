@@ -11,8 +11,6 @@ public class JavaServer {
             serverSocket = new ServerSocket(9999); // set port number
             // Print Server Port Number
             System.out.println("Server started on port 9999");
-            // Print Server IP Address
-            System.out.println("Server IP: " + InetAddress.getLocalHost().getHostAddress());
         } catch (IOException e) {
             System.err.println("Could not listen on port: 9999.");
             System.exit(-1);
