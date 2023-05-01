@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.nio.charset.StandardCharsets;
 
 public class JavaServer {
     public static void main(String[] args) throws IOException {
@@ -31,9 +30,8 @@ public class JavaServer {
             writer.flush(); // flush() flushes the output stream and forces any buffered output bytes to be written out
             
             // Read from client
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-            String receivedLine; // read a line from the client
-            receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
             System.out.println("Received message from client: " + receivedLine);
 
             // Send customer message to client
