@@ -1,6 +1,6 @@
 import socket
 
-HOST = '192.168.56.1'  # set the host
+HOST = '192.168.0.19'  # set the host
 PORT = 9999        # set the port
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
