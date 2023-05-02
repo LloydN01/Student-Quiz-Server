@@ -22,18 +22,18 @@ public class JavaServer2 {
             System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
             // Create a new thread for the client
-            ClientThread clientThread = new ClientThread(clientSocket);
+            ClientThread2 clientThread = new ClientThread2(clientSocket);
             clientThread.start();
         }
         serverSocket.close();
     }
 }
 
-class ClientThread extends Thread {
+class ClientThread2 extends Thread {
     private Socket clientSocket = null;
 
-    public ClientThread(Socket socket) {
-        super("ClientThread");
+    public ClientThread2(Socket socket) {
+        super("ClientThread2");
         clientSocket = socket;
     }
 

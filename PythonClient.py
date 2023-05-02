@@ -30,7 +30,7 @@ while inputs:
     
     # message = input("Enter a message to send: ") + "\n" # add a new line character to the end of the message
     # t.sendall(message.encode())
-    message = "hello my brother\n"
+    message = "//JAVA//hello my brother\n"
     s.send(message.encode())
     t.send("hello my sister\n".encode())
 s.close()
