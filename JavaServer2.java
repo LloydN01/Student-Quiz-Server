@@ -2,17 +2,17 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class JavaServer {
+public class JavaServer2 {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         boolean listening = true;
 
         try {
-            serverSocket = new ServerSocket(9999); // set port number
+            serverSocket = new ServerSocket(9998); // set port number
             // Print Server Port Number
-            System.out.println("Server started on port 9999");
+            System.out.println("Server started on port 9998");
         } catch (IOException e) {
-            System.err.println("Could not listen on port: 9999.");
+            System.err.println("Could not listen on port: 9998.");
             System.exit(-1);
         }
 
@@ -50,12 +50,8 @@ class ClientThread extends Thread {
             while(clientSocket.isConnected()){
                 // Read from client
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                if(receivedLine.contains("//JAVA//")){
-                    System.out.println("Received message from client: " + receivedLine);
-                }
-                else{
-                    System.out.println("no message");
-                }
+                System.out.println("Received message from client: " + receivedLine);
+
                 // Send customer message to client
                 System.out.print("Enter message to send to client: ");
                 String sendLine = scanner.nextLine();
