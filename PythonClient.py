@@ -2,17 +2,20 @@ import socket
 import select
 
 HOST = '10.135.156.144'  # set the host
-PORT = 9999        # set the port
+PORT = 9999
+PORT2 = 9998
 
 # with (socket.socket(socket.AF_INET, socket.SOCK_STREAM),socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as (s,t):
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-t = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
-t.connect((HOST,9998))
-s.setblocking(False)
-t.setblocking(False)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-inputs = [s,t]
+server.connect((HOST, PORT))
+server2.connect((HOST, PORT2))
+
+server.setblocking(False)
+server2.setblocking(False)
+ 
+inputs = [server, server2]
 outputs = []
 
 while inputs:
@@ -22,16 +25,14 @@ while inputs:
     #     data = "hello my brother"
     #     sent = i.sendall(data.encode())
 
-    for s in readable:
-        data = s.recv(1024)
-        if data:
-            print('Received from', s.getpeername()[1], ':', data.decode())
-
+    for recievedData in readable:
+        recievedMsg = recievedData.recv(1024)
+        if recievedMsg:
+            print('Received from', recievedData.getpeername()[1], ':', recievedMsg.decode())
     
     # message = input("Enter a message to send: ") + "\n" # add a new line character to the end of the message
     # t.sendall(message.encode())
-    message = "//JAVA//hello my brother\n"
-    s.send(message.encode())
-    t.send("hello my sister\n".encode())
-s.close()
-t.close()
+    server.send("//JAVA//hello my brother\n".encode())
+    server2.send("//PYTHON//hello my sister\n".encode())
+server.close()
+server2.close()

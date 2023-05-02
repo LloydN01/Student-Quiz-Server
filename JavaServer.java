@@ -50,7 +50,6 @@ class ClientThread extends Thread {
             while(clientSocket.isConnected()){
                 // Read from client
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                // System.out.println(receivedLine.contains("//JAVA//"));
                 if(receivedLine.contains("//JAVA//")){
                     System.out.println("Received message from client: " + receivedLine);
                 }

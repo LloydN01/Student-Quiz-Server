@@ -50,8 +50,12 @@ class ClientThread2 extends Thread {
             while(clientSocket.isConnected()){
                 // Read from client
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                System.out.println("Received message from client: " + receivedLine);
-
+                if(receivedLine.contains("//PYTHON//")){
+                    System.out.println("Received message from client: " + receivedLine);
+                }
+                else{
+                    System.out.println("no message");
+                }
                 // Send customer message to client
                 System.out.print("Enter message to send to client: ");
                 String sendLine = scanner.nextLine();
