@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class JavaServer {
+public class JavaQB {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         boolean listening = true;
@@ -52,7 +52,7 @@ class ClientThread extends Thread {
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
                 System.out.println("Received message from client: " + receivedLine);
 
-                // Send customer message to client
+                // Send custom message to client
                 System.out.print("Enter message to send to client: ");
                 String sendLine = scanner.nextLine();
                 writer.println(sendLine);
