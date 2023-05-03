@@ -4,12 +4,15 @@ import java.util.*;
 
 public class QB {
     public static int port;
+    public static String serverType;
     public static void main(String[] args) throws IOException {
         if (args[0].equals("-p")){
             port = 9998;
+            serverType = "Python";
         }
         else{
             port = 9999;
+            serverType = "Java";
         }
         
         ServerSocket serverSocket = null;
@@ -18,7 +21,7 @@ public class QB {
         try {
             serverSocket = new ServerSocket(port); // set port number
             // Print Server Port Number
-            System.out.println("Server started on port "+port);
+            System.out.println(serverType + " Server is listening on port " + port);
         } catch (IOException e) {
             System.err.println("Could not listen on port: "+port);
             System.exit(-1);
@@ -29,24 +32,6 @@ public class QB {
             Socket clientSocket = serverSocket.accept();
             System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
-            // Create a new thread for the client
-            ClientThread clientThread = new ClientThread(clientSocket);
-            clientThread.start();
-        }
-        serverSocket.close();
-    }
-}
-
-class ClientThread extends Thread {
-    private Socket clientSocket = null;
-
-    public ClientThread(Socket socket) {
-        super("ClientThread");
-        clientSocket = socket;
-    }
-
-    public void run() {
-        try {
             Scanner scanner = new Scanner(System.in);
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -67,12 +52,16 @@ class ClientThread extends Thread {
                 writer.flush();
             }
 
-            writer.close();
-            reader.close();
-            clientSocket.close();
-            scanner.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                writer.close();
+                reader.close();
+                clientSocket.close();
+                scanner.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+        serverSocket.close();
     }
 }
