@@ -1,7 +1,7 @@
 import socket
 import select
 
-HOST = '10.135.156.144'  # set the host
+HOST = '172.20.10.3'  # set the host
 javaPort = 9999
 pythonPort = 9998
 
