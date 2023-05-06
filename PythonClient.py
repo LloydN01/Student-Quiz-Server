@@ -1,7 +1,8 @@
 import socket
 import select
+import random
 
-HOST = '172.20.10.3'  # set the host
+HOST = '192.168.0.19'  # set the host
 javaPort = 9999
 pythonPort = 9998
 
@@ -34,9 +35,14 @@ try:
                 outputs.remove(error)
             error.close()
         
-        answer = "Hello, World!" + "\n" # TODO: This variable will need to be updated when the user submits an answer
-        isJava = True # TODO: Need a way to keep track of this variable and change it according to the question
-        if(isJava):
+        #answer = "Hello, World!" + "\n" # TODO: This variable will need to be updated when the user submits an answer
+        
+
+        answer = random.choice(["$P$Hello, Python!" + "\n", "$J$Hello, Java!" + "\n"])
+
+        # isJava = True # TODO: Need a way to keep track of this variable and change it according to the question
+
+        if("$J$" in answer):
             javaQB.sendall(answer.encode())
         else:
             pythonQB.sendall(answer.encode())
