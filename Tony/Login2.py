@@ -11,7 +11,7 @@ loginDict = ast.literal_eval(info)
 class S(BaseHTTPRequestHandler):
     clients = {}
 
-    def _set_response(self, page):
+    def _set_response(self, page, username=''):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
@@ -30,20 +30,25 @@ class S(BaseHTTPRequestHandler):
         elif page == 'dashboard':
             self.wfile.write(bytes("<h1>TIME TO DIE!</h1>", "utf-8"))
             self.wfile.write(bytes("<p>You have successfully logged in.</p>", "utf-8"))
+            self.wfile.write(bytes(" <form method = 'post'>", "utf-8"))
+            self.wfile.write(bytes("<input type='hidden' id='username' name='username' value='{}'><br><br>".format(username), "utf-8"))
+            self.wfile.write(bytes("<input type='hidden' id='page' name='page' value='dashboard'>", "utf-8"))
             self.wfile.write(bytes("""<p>
             a = [[1,2],[3,4],[5,[6,7]]] <br>
             print(a[2][1][1]) <br>
             
             What value is printed by the print statement?</p>
-        <input type="radio" id="1">
-        <label for="1">6</label><br>
-        <input type="radio" id="2" name="age" value="60">
-        <label for="2">3</label><br>  
-        <input type="radio" id="3" name="age" value="100">
-        <label for="3">5</label><br>
-        <input type="radio" id="4" name="age" value="100">
-        <label for="4">7</label><br><br>
-        <input type="submit" value="Submit">""","utf-8"))
+            <input type="radio" id="1" name="answer" value="6">
+            <label for="1">6</label><br>
+            <input type="radio" id="2" name="answer" value="3">
+            <label for="2">3</label><br>  
+            <input type="radio" id="3" name="answer" value="5">
+            <label for="3">5</label><br>
+            <input type="radio" id="4" name="answer" value="7">
+            <label for="4">7</label><br><br>
+            <input type="submit" value="Submit">
+            </form>
+            """, "utf-8"))
 
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -63,24 +68,45 @@ class S(BaseHTTPRequestHandler):
 
         username = ""
         password = ""
+        answer = ""
+        page = ""
 
-        # Extract the username and password from the form data
+        # Extract the username, password, and answer from the form data
         params = post_data.split('&')
         for param in params:
             key, value = param.split('=')
+            # print(key + "and" + value)
             if key == 'username':
                 username = value
             elif key == 'password':
                 password = value
-
+            elif key == 'answer':
+                answer = value
+            elif key == 'page':
+                page = value
+            
         # Perform the login validation (e.g., check against a database)
-        if username in loginDict and loginDict[username] == password:
-            self._set_response('dashboard')
+        if page == 'dashboard':
+                # self.process_answer(answer, username)
+                print("Answer:", answer)
+                print("Name:", username)
+                self._set_response('dashboard', username)
         else:
-            self._set_response('login')
-            self.wfile.write(bytes("<p>Invalid username or password. Please try again.</p>", "utf-8"))
+            if username in loginDict and loginDict[username] == password:
+                # self.process_answer(answer, username)
+                self._set_response('dashboard', username)
+            else:
+                self._set_response('login',"")
+                self.wfile.write(bytes("<p>Invalid username or password. Please try again.</p>", "utf-8"))
 
+    # def process_answer(self, answer, username):
+    #     # Process the submitted answer and username as needed
+    #     # For now, simply print the values
+    #     print("Selected answer:", answer)
+    #     print("Username:", username)
 
+    #     # Send the response page
+    #     self._set_response('dashboard', username)
 
 def run(server_class=HTTPServer, handler_class=S, port=8080):
     server_address = ('', port)
