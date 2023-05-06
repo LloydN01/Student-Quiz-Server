@@ -1,7 +1,10 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
 import logging
+
 class S(BaseHTTPRequestHandler):
-    messages = []
+    clients = {}
+
     def _set_response(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
@@ -18,44 +21,46 @@ class S(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<button onclick=\"fetch('/activate').then(response => console.log(response.text()))\">GET</button>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
-
     def do_GET(self):
         if self.path == '/activate':
-            print(self.messages)
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(bytes('Button was clicked!', 'utf-8'))
         else:
-            # logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-            print("refreshed")
             self._set_response()
             self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length).decode('utf-8') # <--- Gets the data itself
-        # print(post_data)
-        # logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
-        #         str(self.path), str(self.headers), post_data.decode('utf-8'))
+
         message = post_data.split('=')[1]  # extract the message from the message body
-        self.messages.append(message)
+
+        # Get the IP address of the client
+        ip = self.client_address[0]
+
+        # If the client is new, add them to the dictionary
+        if ip not in self.clients:
+            self.clients[ip] = []
+
+        # Append the message to the client's message list
+        self.clients[ip].append(message)
 
         self._set_response()
-        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
-        self.wfile.write(bytes("Message received: {}".format(message), "utf-8"))
+        self.wfile.write(bytes("Message received: {} from {}".format(message, ip), "utf-8"))
 
 def run(server_class=HTTPServer, handler_class=S, port=8080):
-    # logging.basicConfig(level=logging.INFO)
-    server_address = ('', port) 
+    server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    # logging.info('Starting httpd...\n')
+
     try:
-        httpd.serve_forever()
+        # Create a new thread for each incoming request
+        while True:
+            httpd.handle_request()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    # logging.info('Stopping httpd...\n')
 
 if __name__ == '__main__':
     from sys import argv
