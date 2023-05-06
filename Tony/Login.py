@@ -1,6 +1,12 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 import logging
+import ast
+
+with open('loginDB.txt', 'r') as file:
+    info = file.read()
+
+loginDict = ast.literal_eval(info)
 
 class S(BaseHTTPRequestHandler):
     clients = {}
@@ -55,7 +61,7 @@ class S(BaseHTTPRequestHandler):
                 password = value
 
         # Perform the login validation (e.g., check against a database)
-        if username == "admin" and password == "password":
+        if username in loginDict and loginDict[username] == password:
             self._set_response('dashboard')
         else:
             self._set_response('login')
