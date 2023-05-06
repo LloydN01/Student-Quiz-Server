@@ -1,18 +1,19 @@
+package LegacyCode;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class PythonQB {
+public class JavaQB {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         boolean listening = true;
 
         try {
-            serverSocket = new ServerSocket(9998); // set port number
+            serverSocket = new ServerSocket(9999); // set port number
             // Print Server Port Number
-            System.out.println("Server started on port 9998");
+            System.out.println("Server started on port 9999");
         } catch (IOException e) {
-            System.err.println("Could not listen on port: 9998.");
+            System.err.println("Could not listen on port: 9999.");
             System.exit(-1);
         }
 
@@ -22,18 +23,18 @@ public class PythonQB {
             System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
             // Create a new thread for the client
-            ClientThread2 clientThread = new ClientThread2(clientSocket);
+            ClientThread clientThread = new ClientThread(clientSocket);
             clientThread.start();
         }
         serverSocket.close();
     }
 }
 
-class ClientThread2 extends Thread {
+class ClientThread extends Thread {
     private Socket clientSocket = null;
 
-    public ClientThread2(Socket socket) {
-        super("ClientThread2");
+    public ClientThread(Socket socket) {
+        super("ClientThread");
         clientSocket = socket;
     }
 
