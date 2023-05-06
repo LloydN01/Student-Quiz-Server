@@ -36,9 +36,9 @@ public class QB {
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-            // Send initial welcome message to client
-            writer.println("Welcome to the server!"); // println() writes a string, followed by the '\n' character, to the output stream
-            writer.flush(); // flush() flushes the output stream and forces any buffered output bytes to be written out
+            // // Send initial welcome message to client
+            // writer.println("Welcome to the server!"); // println() writes a string, followed by the '\n' character, to the output stream
+            // writer.flush(); // flush() flushes the output stream and forces any buffered output bytes to be written out
 
             while(clientSocket.isConnected()){
                 // Read from client

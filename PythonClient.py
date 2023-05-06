@@ -12,6 +12,9 @@ pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 javaQB.connect((HOST, javaPort))
 pythonQB.connect((HOST, pythonPort))
 
+if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
+    print("Connected to both servers")
+
 javaQB.setblocking(False)
 pythonQB.setblocking(False)
  
@@ -21,6 +24,15 @@ outputs = []
 try:
     while inputs:
         readable, writable, exceptional = select.select(inputs, outputs, inputs)
+
+        # answer = input("Message ('$P' = Python, '$J' = Java): ") + "\n"
+        
+        answer = random.choice(["$P$Hello, Python!", "$J$Hello, Java!"]) + "\n"
+        print(answer)
+        if("$J$" in answer):
+            javaQB.sendall(answer.encode())
+        else:
+            pythonQB.sendall(answer.encode())
 
         for recievedData in readable:
             recievedQuestion = recievedData.recv(1024)
@@ -34,18 +46,6 @@ try:
             if error in outputs:
                 outputs.remove(error)
             error.close()
-        
-        #answer = "Hello, World!" + "\n" # TODO: This variable will need to be updated when the user submits an answer
-        
-
-        answer = random.choice(["$P$Hello, Python!" + "\n", "$J$Hello, Java!" + "\n"])
-
-        # isJava = True # TODO: Need a way to keep track of this variable and change it according to the question
-
-        if("$J$" in answer):
-            javaQB.sendall(answer.encode())
-        else:
-            pythonQB.sendall(answer.encode())
 except:
     print("Connection closed")
 
