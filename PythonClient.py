@@ -1,8 +1,9 @@
 import socket
 import select
 import random
+from sys import argv
 
-HOST = '192.168.0.19'  # set the host
+HOST = str(argv[1])  # set the host
 javaPort = 9999
 pythonPort = 9998
 
@@ -20,24 +21,23 @@ pythonQB.setblocking(False)
  
 inputs = [javaQB, pythonQB]
 outputs = []
+counter = 0
 
 try:
     while inputs:
-        readable, writable, exceptional = select.select(inputs, outputs, inputs, 1)
-
-        # answer = input("Message ('$P' = Python, '$J' = Java): ") + "\n"
-        
-        answer = random.choice(["$P$Hello, Python!", "$J$Hello, Java!"]) + "\n"
-        print(answer)
+        answer = input("type here: ") + '\n'
+        print(answer[3:])
         if("$J$" in answer):
-            javaQB.sendall(answer.encode())
+            javaQB.sendall(answer[3:].encode())
         else:
-            pythonQB.sendall(answer.encode())
+            pythonQB.sendall(answer[3:].encode())
 
+        readable, writable, exceptional = select.select(inputs, outputs, inputs)
         for recievedData in readable:
             recievedQuestion = recievedData.recv(1024)
             if recievedQuestion:
                 print('Received from', recievedData.getpeername()[1], ':', recievedQuestion.decode())
+                counter+=1
 
         # Handle exceptional sockets
         for error in exceptional:
@@ -46,6 +46,9 @@ try:
             if error in outputs:
                 outputs.remove(error)
             error.close()
+        
+
+        
 except:
     print("Connection closed")
 
