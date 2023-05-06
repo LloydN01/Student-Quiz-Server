@@ -60,8 +60,9 @@ public class QB {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
 
+            break;
+        }
         serverSocket.close();
     }
 }
