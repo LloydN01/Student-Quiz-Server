@@ -23,7 +23,7 @@ outputs = []
 
 try:
     while inputs:
-        readable, writable, exceptional = select.select(inputs, outputs, inputs)
+        readable, writable, exceptional = select.select(inputs, outputs, inputs, 1)
 
         # answer = input("Message ('$P' = Python, '$J' = Java): ") + "\n"
         
