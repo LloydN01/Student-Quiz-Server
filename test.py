@@ -29,7 +29,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
         self.wfile.write(bytes("<body>", "utf-8"))
         self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
         self.wfile.write(bytes("<form method='post'>", "utf-8"))
@@ -37,7 +36,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<input type='text' id='textbox' name='message'><br><br>", "utf-8"))
         self.wfile.write(bytes("<input type='submit' value='Submit'>", "utf-8"))
         self.wfile.write(bytes('</form>',"utf-8"))
-        self.wfile.write(bytes("<button onclick=\"fetch('/activate').then(response => console.log(response.text()))\">GET</button>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
     def do_GET(self):
@@ -64,17 +62,17 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         answer = post_data.decode() + '\n'
-        print(answer[3:])
+        answer = answer[8:]
+        print(answer)
         if "$J$" in answer:
             javaQB.sendall(answer[3:].encode())
         else:
             pythonQB.sendall(answer[3:].encode())
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+        self._set_response()
 
 with HTTPServer(("", PORT), MyHTTPRequestHandler) as httpd:
     print("serving at port", PORT)
+    httpd.serve_forever()
     try:
         while inputs:
             readable, writable, exceptional = select.select(inputs, outputs, inputs)
