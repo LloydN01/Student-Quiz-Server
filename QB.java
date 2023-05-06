@@ -36,10 +36,6 @@ public class QB {
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-            // Send initial welcome message to client
-            writer.println("Welcome to the server!"); // println() writes a string, followed by the '\n' character, to the output stream
-            writer.flush(); // flush() flushes the output stream and forces any buffered output bytes to be written out
-
             while(clientSocket.isConnected()){
                 // Read from client
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
@@ -50,6 +46,7 @@ public class QB {
                 String sendLine = scanner.nextLine();
                 writer.println(sendLine);
                 writer.flush();
+                System.out.println("Message sent");
             }
 
             try {
