@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from sys import argv
 
 HOST = str(argv[1])
-PORT = 8080
+PORT = 5000
 JAVA_PORT = 9999
 PYTHON_PORT = 9998
 
@@ -24,6 +24,22 @@ inputs = [javaQB, pythonQB]
 outputs = []
 
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
+        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
+        self.wfile.write(bytes("<body>", "utf-8"))
+        self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
+        self.wfile.write(bytes("<form method='post'>", "utf-8"))
+        self.wfile.write(bytes("<label for='textbox'>Enter a message:</label><br>", "utf-8"))
+        self.wfile.write(bytes("<input type='text' id='textbox' name='message'><br><br>", "utf-8"))
+        self.wfile.write(bytes("<input type='submit' value='Submit'>", "utf-8"))
+        self.wfile.write(bytes('</form>',"utf-8"))
+        self.wfile.write(bytes("<button onclick=\"fetch('/activate').then(response => console.log(response.text()))\">GET</button>", "utf-8"))
+        self.wfile.write(bytes("</body></html>", "utf-8"))
+
     def do_GET(self):
         if self.path == '/activate':
             self.send_response(200)
