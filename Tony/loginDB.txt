@@ -1,1 +1,1 @@
-{'23090585':'password'}
+{'23090585':'password', 'admin':'password'}
