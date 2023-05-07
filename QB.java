@@ -1,10 +1,17 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.HashMap;
 
 public class QB {
     public static int port;
     public static String serverType;
+    public static String locationOfQuestionFiles = "./Questions/";
+
+    public static HashMap<String, String> questions = new HashMap<String, String>();
+    public static HashMap<String, String> answers = new HashMap<String, String>();
+    public static HashMap<String, String> options = new HashMap<String, String>();
+
     public static void main(String[] args) throws IOException {
         if (args[0].equals("-p")){
             port = 9998;
@@ -14,6 +21,8 @@ public class QB {
             port = 9999;
             serverType = "Java";
         }
+
+        String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
         
         ServerSocket serverSocket = null;
         boolean listening = true;
@@ -41,12 +50,15 @@ public class QB {
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
                 System.out.println("Received message from client: " + receivedLine);
 
-                // Send custom message to client
-                System.out.print("Enter message to send to client: ");
-                String sendLine = scanner.nextLine();
-                writer.println(sendLine);
+                // // Send custom message to client
+                // System.out.print("Enter message to send to client: ");
+                // String sendLine = scanner.nextLine();
+                // writer.println(sendLine);
+                // writer.flush();
+                // System.out.println("Message sent");
+
+                writer.println(readQuestions);
                 writer.flush();
-                System.out.println("Message sent");
             }
 
             try {
@@ -61,5 +73,24 @@ public class QB {
             break;
         }
         serverSocket.close();
+    }
+
+    // Function that reads a text file
+    public static String readFile(String fileName) throws IOException {
+        BufferedReader buffer = new BufferedReader(new FileReader(fileName));
+        try {
+            StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
+            String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+
+            while (line != null) {
+                fileContent.append(line);
+                fileContent.append("\n");
+                line = buffer.readLine();
+            }
+
+            return fileContent.toString();
+        } finally {
+            buffer.close();
+        }
     }
 }

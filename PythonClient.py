@@ -47,8 +47,6 @@ try:
                 outputs.remove(error)
             error.close()
         
-
-        
 except:
     print("Connection closed")
 

@@ -1,0 +1,94 @@
+Q1. What is the output of the following code snippet in Java?
+
+int num1 = 10;
+int num2 = 5;
+System.out.println(num1/num2);
+
+a. 2.5
+b. 2
+c. 5
+d. 0.5
+
+Q2. Which of the following is NOT a valid keyword in Java?
+
+a. private
+b. protected
+c. unsigned
+d. final
+
+Q3. What is the difference between == and equals() method in Java?
+
+a. both are used to compare two objects in Java.
+b. == compares the reference while equals() compares the values of two objects. (answer)
+c. equals() compares the reference while == compares the values of two objects.
+d. There is no difference between == and equals() method.
+
+Q4. What type of programming language is Java?
+
+a. Code
+b. English
+c. Object-oriented
+d. Function Oriented
+
+
+Q5. What is returned by this statement?
+
+a = [[1,2],[3,4],[5,[6,7]]]
+return(a[2][1][1])
+
+a. 6
+b. 3
+c. 5
+d. 7
+
+Q6. How would you utilise this class to grab its "number" value?
+
+public class object(){
+    Public Int number = 23;
+    Public String numbers = "38";
+}
+Object g = new Object()
+
+a. g.get(number)
+b. g.number
+c. g.int(number)
+d. get(g).number
+
+Q7. which of the following is not a primitive data type in java
+
+a. int
+b. float
+c. double
+d. string
+
+Q8. what is the output of this:
+
+static int plusMethod(int x, int y) {
+  return x + y;
+}
+
+static double plusMethod(double x, double y) {
+  return x + y;
+}
+
+public static void main(String[] args) {
+  int myNum1 = plusMethod(8, 5);
+  double myNum1 = plusMethod(4.3, 6.26);
+  return myNum2
+}
+
+a. 13
+b. 10.56
+c. compile error
+d. 0
+
+Q9 . Which of the following is not a valid way to declare and initialize an array in Java?
+
+a. int[] arr = {1, 2, 3};
+b. int arr[] = {1, 2, 3};
+c. int arr[3] = {1, 2, 3};
+d. All of the above are valid.
+
+Q10. Write a Java method mySum(a, b) where it returns the sum of a and b
+
+Q11. Write a function that takes in a even numbered list and returns the sum of every second number within the list
