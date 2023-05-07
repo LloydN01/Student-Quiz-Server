@@ -27,7 +27,7 @@ class S(BaseHTTPRequestHandler):
             self.wfile.write(bytes("<input type='password' id='password' name='password'><br><br>", "utf-8"))
             self.wfile.write(bytes("<input type='submit' value='Login'>", "utf-8"))
             self.wfile.write(bytes('</form>', "utf-8"))
-        elif page == 'dashboard':
+        elif page == 'questions':
             self.wfile.write(bytes("<h1>TIME TO DIE!</h1>", "utf-8"))
             self.wfile.write(bytes("<p>You have successfully logged in.</p>", "utf-8"))
             self.wfile.write(bytes(" <form method = 'post'>", "utf-8"))
@@ -47,8 +47,8 @@ class S(BaseHTTPRequestHandler):
             <input type="radio" id="4" name="answer" value="7">
             <label for="4">7</label><br><br>
             <input type="submit" value="Submit">
-            </form>
             """, "utf-8"))
+            self.wfile.write(bytes("</form>", "utf-8"))
 
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -90,11 +90,11 @@ class S(BaseHTTPRequestHandler):
                 # self.process_answer(answer, username)
                 print("Answer:", answer)
                 print("Name:", username)
-                self._set_response('dashboard', username)
+                self._set_response('questions', username)
         else:
             if username in loginDict and loginDict[username] == password:
                 # self.process_answer(answer, username)
-                self._set_response('dashboard', username)
+                self._set_response('questions', username)
             else:
                 self._set_response('login',"")
                 self.wfile.write(bytes("<p>Invalid username or password. Please try again.</p>", "utf-8"))
