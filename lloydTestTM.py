@@ -61,8 +61,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         numJavaQuestions, numPythonQuestions = randomiseQuestions()
 
         # Send the number of questions to each server
-        javaQB.sendall(bytes(str(numJavaQuestions) + "/n", "utf-8"))
-        pythonQB.sendall(bytes(str(numPythonQuestions) + "/n", "utf-8"))
+        javaQB.sendall(bytes(str(numJavaQuestions) + "\n", "utf-8"))
+        pythonQB.sendall(bytes(str(numPythonQuestions) + "\n", "utf-8"))
 
         print("Asked for", numJavaQuestions, "questions to Java server")
         print("Asked for", numPythonQuestions, "questions to Python server")

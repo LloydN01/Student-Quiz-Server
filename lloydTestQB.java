@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.ArrayList;
 
 public class lloydTestQB {
     public static int port;
@@ -17,8 +18,11 @@ public class lloydTestQB {
             serverType = "Java";
         }
 
-        String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
-        
+        ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
+        for (String question : readQuestions) {
+            System.out.println(question);
+        }
+
         ServerSocket serverSocket = null;
         boolean listening = true;
 
@@ -42,7 +46,7 @@ public class lloydTestQB {
 
             while(clientSocket.isConnected()){
                 // Read from client
-                int numQuestions = Integer.parseInt(reader.readLine().replaceAll("/n", "")); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+                int numQuestions = Integer.parseInt(reader.readLine()); // readLine() reads a line of text until it encounters a '\n' or '\r' character
                 System.out.println("Number of questions: " + numQuestions);
 
                 // Send custom message to client
@@ -67,19 +71,18 @@ public class lloydTestQB {
     }
 
     // Function that reads a text file
-    public static String readFile(String fileName) throws IOException {
+    public static ArrayList<String> readFile(String fileName) throws IOException {
         BufferedReader buffer = new BufferedReader(new FileReader(fileName));
-        StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
+        
         String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+        ArrayList<String> questionsList = new ArrayList<String>();
 
         while (line != null) {
-            fileContent.append(line);
-            fileContent.append("\n");
+            questionsList.add(line.replace('$', '\n'));
             line = buffer.readLine();
         }
 
         buffer.close();
-
-        return fileContent.toString();
+        return questionsList;
     }
 }
