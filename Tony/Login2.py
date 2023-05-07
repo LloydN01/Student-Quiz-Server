@@ -8,6 +8,7 @@ with open('loginDB.txt', 'r') as file:
 
 loginDict = ast.literal_eval(info)
 
+
 class S(BaseHTTPRequestHandler):
     clients = {}
 
@@ -32,7 +33,7 @@ class S(BaseHTTPRequestHandler):
             self.wfile.write(bytes("<p>You have successfully logged in.</p>", "utf-8"))
             self.wfile.write(bytes(" <form method = 'post'>", "utf-8"))
             self.wfile.write(bytes("<input type='hidden' id='username' name='username' value='{}'><br><br>".format(username), "utf-8"))
-            self.wfile.write(bytes("<input type='hidden' id='page' name='page' value='dashboard'>", "utf-8"))
+            self.wfile.write(bytes("<input type='hidden' id='page' name='page' value='questions'>", "utf-8"))
             self.wfile.write(bytes("""<p>
             a = [[1,2],[3,4],[5,[6,7]]] <br>
             print(a[2][1][1]) <br>
@@ -86,7 +87,7 @@ class S(BaseHTTPRequestHandler):
                 page = value
             
         # Perform the login validation (e.g., check against a database)
-        if page == 'dashboard':
+        if page == 'questions':
                 # self.process_answer(answer, username)
                 print("Answer:", answer)
                 print("Name:", username)
@@ -94,6 +95,9 @@ class S(BaseHTTPRequestHandler):
         else:
             if username in loginDict and loginDict[username] == password:
                 # self.process_answer(answer, username)
+                #TODO grab questions from database
+                #TODO also check in stdQuestions.txt that user doesn't already have questions assigned to them
+                #if they do have questions assigned, grab those and their last answers
                 self._set_response('questions', username)
             else:
                 self._set_response('login',"")
