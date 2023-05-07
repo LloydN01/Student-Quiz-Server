@@ -47,6 +47,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         answer = unquote(post_data) + '\n'
+        print(answer)
         answer = answer[8:]
         print(answer)
         if "$J$" in answer:

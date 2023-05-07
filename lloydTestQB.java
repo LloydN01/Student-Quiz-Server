@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class QB {
+public class lloydTestQB {
     public static int port;
     public static String serverType;
     public static String locationOfQuestionFiles = "./Questions/";
@@ -42,15 +42,14 @@ public class QB {
 
             while(clientSocket.isConnected()){
                 // Read from client
-                String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                System.out.println("Received message from client: " + receivedLine);
+                int numQuestions = Integer.parseInt(reader.readLine().replaceAll("/n", "")); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+                System.out.println("Number of questions: " + numQuestions);
 
                 // Send custom message to client
-                System.out.print("Enter message to send to client: ");
-                String sendLine = scanner.nextLine();
-                writer.println(sendLine);
+                String questions = "hello from " + serverType + " server\n";
+                writer.println(questions);
                 writer.flush();
-                System.out.println("Message sent");
+                System.out.println("Question sent");
             }
 
             try {
@@ -70,19 +69,17 @@ public class QB {
     // Function that reads a text file
     public static String readFile(String fileName) throws IOException {
         BufferedReader buffer = new BufferedReader(new FileReader(fileName));
-        try {
-            StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
-            String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+        StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
+        String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
 
-            while (line != null) {
-                fileContent.append(line);
-                fileContent.append("\n");
-                line = buffer.readLine();
-            }
-
-            return fileContent.toString();
-        } finally {
-            buffer.close();
+        while (line != null) {
+            fileContent.append(line);
+            fileContent.append("\n");
+            line = buffer.readLine();
         }
+
+        buffer.close();
+
+        return fileContent.toString();
     }
 }
