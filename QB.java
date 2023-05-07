@@ -1,16 +1,11 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.util.HashMap;
 
 public class QB {
     public static int port;
     public static String serverType;
     public static String locationOfQuestionFiles = "./Questions/";
-
-    public static HashMap<String, String> questions = new HashMap<String, String>();
-    public static HashMap<String, String> answers = new HashMap<String, String>();
-    public static HashMap<String, String> options = new HashMap<String, String>();
 
     public static void main(String[] args) throws IOException {
         if (args[0].equals("-p")){
@@ -50,12 +45,12 @@ public class QB {
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
                 System.out.println("Received message from client: " + receivedLine);
 
-                // // Send custom message to client
-                // System.out.print("Enter message to send to client: ");
-                // String sendLine = scanner.nextLine();
-                // writer.println(sendLine);
-                // writer.flush();
-                // System.out.println("Message sent");
+                // Send custom message to client
+                System.out.print("Enter message to send to client: ");
+                String sendLine = scanner.nextLine();
+                writer.println(sendLine);
+                writer.flush();
+                System.out.println("Message sent");
 
                 writer.println(readQuestions);
                 writer.flush();
