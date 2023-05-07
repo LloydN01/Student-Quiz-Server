@@ -1,13 +1,34 @@
+import socket
+import select
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import logging
-class S(BaseHTTPRequestHandler):
-    messages = []
+from sys import argv
+
+HOST = str(argv[1])
+PORT = 5000
+JAVA_PORT = 9999
+PYTHON_PORT = 9998
+
+javaQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+javaQB.connect((HOST, JAVA_PORT))
+pythonQB.connect((HOST, PYTHON_PORT))
+
+if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
+    print("Connected to both servers")
+
+javaQB.setblocking(False)
+pythonQB.setblocking(False)
+
+inputs = [javaQB, pythonQB]
+outputs = []
+
+class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     def _set_response(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
         self.wfile.write(bytes("<body>", "utf-8"))
         self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
         self.wfile.write(bytes("<form method='post'>", "utf-8"))
@@ -15,52 +36,60 @@ class S(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<input type='text' id='textbox' name='message'><br><br>", "utf-8"))
         self.wfile.write(bytes("<input type='submit' value='Submit'>", "utf-8"))
         self.wfile.write(bytes('</form>',"utf-8"))
-        self.wfile.write(bytes("<button onclick=\"fetch('/activate').then(response => console.log(response.text()))\">GET</button>", "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
-
 
     def do_GET(self):
         if self.path == '/activate':
-            print(self.messages)
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(bytes('Button was clicked!', 'utf-8'))
         else:
-            # logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-            print("refreshed")
-            self._set_response()
-            self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(b"<html><head><title>localhost</title></head>")
+            self.wfile.write(b"<body><p>This is an example web server.</p>")
+            self.wfile.write(b"<form method='post'>")
+            self.wfile.write(b"<label for='textbox'>Enter a message:</label><br>")
+            self.wfile.write(b"<input type='text' id='textbox' name='message'><br><br>")
+            self.wfile.write(b"<input type='submit' value='Submit'>")
+            self.wfile.write(b"</form>")
+            self.wfile.write(b"<button onclick=\"fetch('/activate').then(response => console.log(response.text()))\">GET</button>")
+            self.wfile.write(b"</body></html>")
 
     def do_POST(self):
-        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-        post_data = self.rfile.read(content_length).decode('utf-8') # <--- Gets the data itself
-        # print(post_data)
-        # logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
-        #         str(self.path), str(self.headers), post_data.decode('utf-8'))
-        message = post_data.split('=')[1]  # extract the message from the message body
-        self.messages.append(message)
-
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        answer = post_data.decode() + '\n'
+        answer = answer[8:]
+        print(answer)
+        if "$J$" in answer:
+            javaQB.sendall(answer[3:].encode())
+        else:
+            pythonQB.sendall(answer[3:].encode())
         self._set_response()
-        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
-        self.wfile.write(bytes("Message received: {}".format(message), "utf-8"))
 
-def run(server_class=HTTPServer, handler_class=S, port=8080):
-    # logging.basicConfig(level=logging.INFO)
-    server_address = ('', port) 
-    httpd = server_class(server_address, handler_class)
-    # logging.info('Starting httpd...\n')
+with HTTPServer(("", PORT), MyHTTPRequestHandler) as httpd:
+    print("serving at port", PORT)
+    httpd.serve_forever()
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    httpd.server_close()
-    # logging.info('Stopping httpd...\n')
+        while inputs:
+            readable, writable, exceptional = select.select(inputs, outputs, inputs)
+            for receivedData in readable:
+                receivedQuestion = receivedData.recv(1024)
+                if receivedQuestion:
+                    print('Received from', receivedData.getpeername()[1], ':', receivedQuestion.decode())
 
-if __name__ == '__main__':
-    from sys import argv
+            # Handle exceptional sockets
+            for error in exceptional:
+                print('Exceptional condition on', error.getpeername())
+                inputs.remove(error)
+                if error in outputs:
+                    outputs.remove(error)
+                error.close()
+    except:
+        print("Connection closed")
 
-    if len(argv) == 2:
-        run(port=int(argv[1]))
-    else:
-        run()
+    javaQB.close()
+    pythonQB.close()
