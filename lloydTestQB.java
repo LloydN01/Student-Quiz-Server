@@ -78,7 +78,7 @@ public class lloydTestQB {
         ArrayList<String> questionsList = new ArrayList<String>();
 
         while (line != null) {
-            questionsList.add(line.replace('$', '\n'));
+            questionsList.add(line);
             line = buffer.readLine();
         }
 
@@ -86,7 +86,7 @@ public class lloydTestQB {
         return questionsList;
     }
 
-    // Function that generates random questions and pyts them in an array
+    // Function that generates random questions and puts them in an array
     public static String[] generateRandomQuestions(int numQuestions, ArrayList<String> readQuestions){
         String[] randomQuestions = new String[numQuestions];
         ArrayList<String> questionsList = new ArrayList<String>(readQuestions); // Copy readQuestions to questionsList
@@ -106,7 +106,7 @@ public class lloydTestQB {
         String questions = "";
 
         for (int i = 0; i < randomQuestions.length; i++){
-            questions += randomQuestions[i] + "\n\n";
+            questions += randomQuestions[i] + "$$"; // $$ is the delimiter for the questions
         }
 
         return questions;

@@ -53,39 +53,81 @@ def getQuestionsFromServer(numQuestions):
         print("Asked for", numJavaQuestions, "questions to Java server")
         print("Asked for", numPythonQuestions, "questions to Python server")
 
+def convertToMultipleChoice(question):
+    # Split the question into the question and the answer
+    question, answer = question.split("$")
+    options = answer.split("/") # Split the answer into the options
+    
+    return (question, options)
+
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
-    def _set_response(self, message):
+    # Starting page -> Later replce with login page
+    def index_page(self):
+        content = "<html><head><title>localhost</title></head>"
+        content += "<body>"
+        content += "<p>Click to get 5 random questions.</p>"
+        content += "<form action='/questions' method='post'>"
+        content += "<input type='submit' value='Randomise'>"
+        content += "</form>"
+        content += "</body></html>"
+
+        return content
+
+    def multipleChoice(self, question, options):
+        content = "<p>{}</p>".format(question)
+        content += "<form method='post'>"
+        for option in options:
+            content += "<input type='radio' id='{}' name='message' value='{}'>".format(option, option)
+            content += "<label for='{}'>{}</label><br>".format(option, option)
+        content += "<input type='submit' value='Submit'>"
+        content += "</form>"
+
+        return content
+
+    def _set_response(self, content):
+        # Request the questions from the servers so that they are ready for the next POST request
         getQuestionsFromServer(randomiseQuestionNumbers())
-        
+
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
-        self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>Click to get 5 random questions.</p>", "utf-8"))
-        self.wfile.write(bytes("<form method='post'>", "utf-8"))
-        self.wfile.write(bytes("<input type='submit' value='Randomise'>", "utf-8"))
-        self.wfile.write(bytes('</form>',"utf-8"))
-
-        self.wfile.write(bytes("<p>Questions Received: <br> {}</p>".format(message), "utf-8"))
-
-        self.wfile.write(bytes("</body></html>", "utf-8"))
+        self.wfile.write(bytes(content, "utf-8"))
 
     def do_GET(self):
-        self._set_response("")
+        if self.path == "/":
+            # Request the starting page
+            content = self.index_page()
+            self._set_response(content)
+        elif self.path == "/questions":
+            content = self.multipleChoice()
+            self._set_response(content)
+        else:
+            self.send_error(404, "File not found {}".format(self.path))
 
     def do_POST(self):
         # Wait for the questions to be received
         readable, _ , _ = select.select(inputs, outputs, inputs)
-        renderQuestions = ""
+        listOfQuestions = []
         for receivedData in readable:
             receivedQuestion = receivedData.recv(1024)
             if receivedQuestion:
-                print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
+                # print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
+                listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
+        
+        # Remove ""s from the list created due to split function
+        listOfQuestions = list(filter(None, listOfQuestions))
 
-                renderQuestions += receivedQuestion.decode().replace("\n", "<br>")
-            
-        self._set_response(renderQuestions)
+        content = ""
+        for question in listOfQuestions:
+            questionType, question = question.split("$", 1)
+            if questionType == "MC":
+                questionBody, options = convertToMultipleChoice(question)
+                content += self.multipleChoice(questionBody, options)
+            elif questionType == "SA":
+                # Have code to handle short answer questions
+                pass # For now
+        
+        self._set_response(content)
 
 with HTTPServer(("", PORT), MyHTTPRequestHandler) as httpd:
     print("serving at port", PORT)
