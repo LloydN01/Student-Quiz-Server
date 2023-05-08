@@ -6,4 +6,4 @@ MC$Which of the following is NOT a valid data type in Python?$a. Tuple/b. Set/c.
 MC$What is the output of the following code snippet in Python?<br>for i in range(1, 5):<br>    	if i == 3:<br>        	continue<br>    	print(i)$a. 1, 2, 3, 4/b. 1, 2, 4/c. 2, 3, 4/d. 1, 3, 4
 MC$What value is printed by the print statement?<br>a = [[1,2],[3,4],[5,[6,7]]]<br>print(a[2][1][1])$a. 6,/b. 3/c. 5/d. 7
 MC$What value results from this expression?<br>(7%5)*2$a. 4/b. 6/c. 60/d. Error
-MC$hat type of value is "2.01" in python?$a. float/b. intger/c. String/d. double
+MC$What type of value is "2.01" in python?$a. float/b. intger/c. String/d. double

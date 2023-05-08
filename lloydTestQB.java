@@ -53,7 +53,7 @@ public class lloydTestQB {
                 String questions = concatenateQuestions(randomQuestions);
                 writer.println(questions);
                 writer.flush();
-                System.out.println("Questions sent:\n" + questions);
+                System.out.println("Questions sent to TM");
             }
 
             try {

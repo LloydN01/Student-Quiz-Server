@@ -1,7 +1,7 @@
 import socket
 import select
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import unquote # To stop the http encoding messing with the message (ie. %24 -> $)
+from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
 
@@ -61,33 +61,45 @@ def convertToMultipleChoice(question):
     return (question, options)
 
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
+    
+    userQuestions = [] # Stores the question in html format
+    questionNumber = 0 # Stores the current question number
+
     # Starting page -> Later replce with login page
     def index_page(self):
+        getQuestionsFromServer(randomiseQuestionNumbers())
         content = "<html><head><title>localhost</title></head>"
         content += "<body>"
         content += "<p>Click to get 5 random questions.</p>"
         content += "<form action='/questions' method='post'>"
-        content += "<input type='submit' value='Randomise'>"
+        content += "<input type='submit' name='get-questions' value='Randomise'>"
         content += "</form>"
         content += "</body></html>"
 
         return content
 
     def multipleChoice(self, question, options):
-        content = "<p>{}</p>".format(question)
+        questionNumber = len(self.userQuestions) + 1
+        # Question
+        content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
         content += "<form method='post'>"
+        # Options
         for option in options:
             content += "<input type='radio' id='{}' name='message' value='{}'>".format(option, option)
             content += "<label for='{}'>{}</label><br>".format(option, option)
         content += "<input type='submit' value='Submit'>"
         content += "</form>"
 
+        # Back and next buttons
+        content += "<form method='post'>"
+        content += "<input type='submit' name='previous-question' value='Previous Question'>"
+        content += "<input type='submit' name='next-question' value='Next Question'>"
+        content += "</form>"
+
         return content
 
     def _set_response(self, content):
         # Request the questions from the servers so that they are ready for the next POST request
-        getQuestionsFromServer(randomiseQuestionNumbers())
-
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
@@ -99,38 +111,60 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             content = self.index_page()
             self._set_response(content)
         elif self.path == "/questions":
-            content = self.multipleChoice()
-            self._set_response(content)
+            self._set_response(self.userQuestions[self.questionNumber])
         else:
             self.send_error(404, "File not found {}".format(self.path))
 
     def do_POST(self):
-        # Wait for the questions to be received
-        readable, _ , _ = select.select(inputs, outputs, inputs)
-        listOfQuestions = []
-        for receivedData in readable:
-            receivedQuestion = receivedData.recv(1024)
-            if receivedQuestion:
-                # print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
-                listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
-        
-        # Remove ""s from the list created due to split function
-        listOfQuestions = list(filter(None, listOfQuestions))
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length).decode('utf-8')
+        data = parse_qs(post_data)
 
-        content = ""
-        for question in listOfQuestions:
-            questionType, question = question.split("$", 1)
-            if questionType == "MC":
-                questionBody, options = convertToMultipleChoice(question)
-                content += self.multipleChoice(questionBody, options)
-            elif questionType == "SA":
-                # Have code to handle short answer questions
-                pass # For now
-        
-        self._set_response(content)
+        print("data: " + str(data))
 
-with HTTPServer(("", PORT), MyHTTPRequestHandler) as httpd:
-    print("serving at port", PORT)
+        if 'get-questions' in data:
+            # First time logging in, request the questions from the servers
+            # Wait for the questions to be received
+            readable, _ , _ = select.select(inputs, outputs, inputs)
+            listOfQuestions = []
+            for receivedData in readable:
+                receivedQuestion = receivedData.recv(1024)
+                if receivedQuestion:
+                    # print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
+                    listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
+            
+            # Remove ""s from the list created due to split function
+            listOfQuestions = list(filter(None, listOfQuestions))
+
+            for question in listOfQuestions:
+                questionType, question = question.split("$", 1)
+                if questionType == "MC":
+                    questionBody, options = convertToMultipleChoice(question)
+                    self.userQuestions.append(self.multipleChoice(questionBody, options))
+                elif questionType == "SA":
+                    # Have code to handle short answer questions
+                    pass # For now
+        elif 'next-question' in data:
+            # Check that the question number is not the last question
+            if MyHTTPRequestHandler.questionNumber < len(MyHTTPRequestHandler.userQuestions) - 1:
+                MyHTTPRequestHandler.questionNumber += 1
+            else:
+                MyHTTPRequestHandler.questionNumber = 0
+        elif 'previous-question' in data:
+            # Check that the question number is not the first question
+            if MyHTTPRequestHandler.questionNumber > 0:
+                MyHTTPRequestHandler.questionNumber -= 1
+            else:
+                MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
+        
+        print("Question number: " + str(MyHTTPRequestHandler.questionNumber))
+        self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+
+def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print('Starting httpd on port', port)
     httpd.serve_forever()
-    javaQB.close()
-    pythonQB.close()
+
+if __name__ == '__main__':
+    run()
