@@ -33,32 +33,18 @@ pythonQB.setblocking(False)
 inputs = [javaQB, pythonQB]
 outputs = []
 
-def randomiseQuestions():
-    # choose a random number between 0 and 10
-    numFromJava = random.randint(0,10)
-    numFromPython = 10 - numFromJava
+# Randomly choose the number of questions requested to each server
+def randomiseQuestionNumbers():
+    # choose a random number between 0 and 5
+    numFromJava = random.randint(0,5)
+    numFromPython = 5 - numFromJava
 
     return (numFromJava, numFromPython)
 
-class MyHTTPRequestHandler(BaseHTTPRequestHandler):
-    def _set_response(self, message):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-        self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
-        self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>Click to get 10 random questions.</p>", "utf-8"))
-        self.wfile.write(bytes("<form method='post'>", "utf-8"))
-        self.wfile.write(bytes("<input type='submit' value='Randomise'>", "utf-8"))
-        self.wfile.write(bytes('</form>',"utf-8"))
-        self.wfile.write(bytes("</body></html>", "utf-8"))
-
-    def do_GET(self):
-        self._set_response("")
-
-    def do_POST(self):
-        # Get the number of questions from each server
-        numJavaQuestions, numPythonQuestions = randomiseQuestions()
+# Send the request for questions to each server
+def getQuestionsFromServer(numQuestions):
+    # Get the number of questions from each server
+        numJavaQuestions, numPythonQuestions = numQuestions
 
         # Send the number of questions to each server
         javaQB.sendall(bytes(str(numJavaQuestions) + "\n", "utf-8"))
@@ -67,13 +53,39 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         print("Asked for", numJavaQuestions, "questions to Java server")
         print("Asked for", numPythonQuestions, "questions to Python server")
 
+class MyHTTPRequestHandler(BaseHTTPRequestHandler):
+    def _set_response(self, message):
+        getQuestionsFromServer(randomiseQuestionNumbers())
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(bytes("<html><head><title>localhost</title></head>", "utf-8"))
+        self.wfile.write(bytes("<body>", "utf-8"))
+        self.wfile.write(bytes("<p>Click to get 5 random questions.</p>", "utf-8"))
+        self.wfile.write(bytes("<form method='post'>", "utf-8"))
+        self.wfile.write(bytes("<input type='submit' value='Randomise'>", "utf-8"))
+        self.wfile.write(bytes('</form>',"utf-8"))
+
+        self.wfile.write(bytes("<p>Questions Received: <br> {}</p>".format(message), "utf-8"))
+
+        self.wfile.write(bytes("</body></html>", "utf-8"))
+
+    def do_GET(self):
+        self._set_response("")
+
+    def do_POST(self):
         # Wait for the questions to be received
-        readable, writable , _ = select.select(inputs, outputs, inputs)
+        readable, _ , _ = select.select(inputs, outputs, inputs)
+        renderQuestions = ""
         for receivedData in readable:
             receivedQuestion = receivedData.recv(1024)
             if receivedQuestion:
-                print('Received from', receivedData.getpeername()[1], ':', receivedQuestion.decode())
-        self._set_response("")
+                print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
+
+                renderQuestions += receivedQuestion.decode().replace("\n", "<br>")
+            
+        self._set_response(renderQuestions)
 
 with HTTPServer(("", PORT), MyHTTPRequestHandler) as httpd:
     print("serving at port", PORT)

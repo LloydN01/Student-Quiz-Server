@@ -19,9 +19,6 @@ public class lloydTestQB {
         }
 
         ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
-        for (String question : readQuestions) {
-            System.out.println(question);
-        }
 
         ServerSocket serverSocket = null;
         boolean listening = true;
@@ -47,13 +44,16 @@ public class lloydTestQB {
             while(clientSocket.isConnected()){
                 // Read from client
                 int numQuestions = Integer.parseInt(reader.readLine()); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                System.out.println("Number of questions: " + numQuestions);
+                System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
 
+                // Generate random questions
+                String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                
                 // Send custom message to client
-                String questions = "hello from " + serverType + " server\n";
+                String questions = concatenateQuestions(randomQuestions);
                 writer.println(questions);
                 writer.flush();
-                System.out.println("Question sent");
+                System.out.println("Questions sent:\n" + questions);
             }
 
             try {
@@ -84,5 +84,31 @@ public class lloydTestQB {
 
         buffer.close();
         return questionsList;
+    }
+
+    // Function that generates random questions and pyts them in an array
+    public static String[] generateRandomQuestions(int numQuestions, ArrayList<String> readQuestions){
+        String[] randomQuestions = new String[numQuestions];
+        ArrayList<String> questionsList = new ArrayList<String>(readQuestions); // Copy readQuestions to questionsList
+        Random rand = new Random();
+
+        for (int i = 0; i < numQuestions; i++){
+            int randomIndex = rand.nextInt(questionsList.size());
+            randomQuestions[i] = questionsList.get(randomIndex);
+            questionsList.remove(randomIndex);
+        }
+
+        return randomQuestions;
+    }
+
+    // Function that concatenates all the questions into one string
+    public static String concatenateQuestions(String[] randomQuestions){
+        String questions = "";
+
+        for (int i = 0; i < randomQuestions.length; i++){
+            questions += randomQuestions[i] + "\n\n";
+        }
+
+        return questions;
     }
 }
