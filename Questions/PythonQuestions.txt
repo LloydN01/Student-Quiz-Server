@@ -7,3 +7,7 @@ MC$What is the output of the following code snippet in Python?<br>for i in range
 MC$What value is printed by the print statement?<br>a = [[1,2],[3,4],[5,[6,7]]]<br>print(a[2][1][1])$a. 6,/b. 3/c. 5/d. 7
 MC$What value results from this expression?<br>(7%5)*2$a. 4/b. 6/c. 60/d. Error
 MC$What type of value is "2.01" in python?$a. float/b. intger/c. String/d. double
+SA$Write a Python program to print "Hello, World!" to the console.
+SA$Write a Python program to calculate the sum of two numbers entered by the user.
+SA$Write a Python program to find the maximum of two numbers entered by the user.
+SA$Write a Python program to check if a number entered by the user is even or odd.

@@ -6,3 +6,6 @@ MC$How would you utilise this class to grab its "number" value?<br>public class 
 MC$Which of the following is not a primitive data type in java?$a. int/b. float/c. double/d. string
 MC$What is the output of this:<br>static int plusMethod(int x, int y) {<br>  return x + y;<br>}<br>static double plusMethod(double x, double y) {<br>  return x + y;<br>}<br>public static void main(String[] args) {<br>  int myNum1 = plusMethod(8, 5);<br>  double myNum1 = plusMethod(4.3, 6.26);<br>  return myNum2<br>}$a. 13/b. 10.56/c. compile error/d. 0
 MC$Which of the following is not a valid way to declare and initialize an array in Java?$a. int[] arr = {1, 2, 3};/b. int arr[] = {1, 2, 3};/c. int arr[3] = {1, 2, 3};/d. All of the above are valid.
+SA$Write a Java program to calculate the sum of two numbers entered by the user
+SA$Write a Java program to find the maximum of two numbers entered by the user.
+SA$Write a Java program to check if a number entered by the user is even or odd.

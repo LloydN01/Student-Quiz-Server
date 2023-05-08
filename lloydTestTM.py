@@ -96,14 +96,40 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content += "<input type='submit' name='next-question' value='Next Question'>"
         content += "</form>"
 
-        return content
+        return "$MC$" + content
+    
+    def shortAnswer(self, question):
+        questionNumber = len(self.userQuestions) + 1
+        # Question
+        content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
+        content += "<form method='post'>"
+        # Answer
+        content += "<textarea name='message' style='width: 550px; height: 250px;'></textarea>"
+        content += "<br>"
+        content += "<input type='submit' value='Submit'>"
+        content += "</form>"
+
+        # Back and next buttons
+        content += "<form method='post'>"
+        content += "<input type='submit' name='previous-question' value='Previous Question'>"
+        content += "<input type='submit' name='next-question' value='Next Question'>"
+        content += "</form>"
+
+        return "$SA$" + content
 
     def _set_response(self, content):
         # Request the questions from the servers so that they are ready for the next POST request
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(bytes(content, "utf-8"))
+        
+        # Check if multiple choice or short answer or index page
+        if content.startswith("$MC$"):
+            self.wfile.write(bytes(content[4:], "utf-8"))
+        elif content.startswith("$SA$"):
+            self.wfile.write(bytes(content[4:], "utf-8"))
+        else:
+            self.wfile.write(bytes(content, "utf-8"))
 
     def do_GET(self):
         if self.path == "/":
@@ -142,8 +168,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     questionBody, options = convertToMultipleChoice(question)
                     self.userQuestions.append(self.multipleChoice(questionBody, options))
                 elif questionType == "SA":
-                    # Have code to handle short answer questions
-                    pass # For now
+                    questionBody = question
+                    self.userQuestions.append(self.shortAnswer(questionBody))
         elif 'next-question' in data:
             # Check that the question number is not the last question
             if MyHTTPRequestHandler.questionNumber < len(MyHTTPRequestHandler.userQuestions) - 1:
@@ -157,7 +183,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             else:
                 MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
         
-        print("Question number: " + str(MyHTTPRequestHandler.questionNumber))
         self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
 
 def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
