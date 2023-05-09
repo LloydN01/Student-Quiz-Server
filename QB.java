@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.ArrayList;
 
 public class QB {
     public static int port;
@@ -17,8 +18,8 @@ public class QB {
             serverType = "Java";
         }
 
-        String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
-        
+        ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
+
         ServerSocket serverSocket = null;
         boolean listening = true;
 
@@ -42,15 +43,17 @@ public class QB {
 
             while(clientSocket.isConnected()){
                 // Read from client
-                String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                System.out.println("Received message from client: " + receivedLine);
+                int numQuestions = Integer.parseInt(reader.readLine()); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+                System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
 
+                // Generate random questions
+                String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                
                 // Send custom message to client
-                System.out.print("Enter message to send to client: ");
-                String sendLine = scanner.nextLine();
-                writer.println(sendLine);
+                String questions = concatenateQuestions(randomQuestions);
+                writer.println(questions);
                 writer.flush();
-                System.out.println("Message sent");
+                System.out.println("Questions sent to TM");
             }
 
             try {
@@ -68,21 +71,44 @@ public class QB {
     }
 
     // Function that reads a text file
-    public static String readFile(String fileName) throws IOException {
+    public static ArrayList<String> readFile(String fileName) throws IOException {
         BufferedReader buffer = new BufferedReader(new FileReader(fileName));
-        try {
-            StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
-            String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+        
+        String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+        ArrayList<String> questionsList = new ArrayList<String>();
 
-            while (line != null) {
-                fileContent.append(line);
-                fileContent.append("\n");
-                line = buffer.readLine();
-            }
-
-            return fileContent.toString();
-        } finally {
-            buffer.close();
+        while (line != null) {
+            questionsList.add(line);
+            line = buffer.readLine();
         }
+
+        buffer.close();
+        return questionsList;
+    }
+
+    // Function that generates random questions and puts them in an array
+    public static String[] generateRandomQuestions(int numQuestions, ArrayList<String> readQuestions){
+        String[] randomQuestions = new String[numQuestions];
+        ArrayList<String> questionsList = new ArrayList<String>(readQuestions); // Copy readQuestions to questionsList
+        Random rand = new Random();
+
+        for (int i = 0; i < numQuestions; i++){
+            int randomIndex = rand.nextInt(questionsList.size());
+            randomQuestions[i] = questionsList.get(randomIndex);
+            questionsList.remove(randomIndex);
+        }
+
+        return randomQuestions;
+    }
+
+    // Function that concatenates all the questions into one string
+    public static String concatenateQuestions(String[] randomQuestions){
+        String questions = "";
+
+        for (int i = 0; i < randomQuestions.length; i++){
+            questions += randomQuestions[i] + "$$"; // $$ is the delimiter for the questions
+        }
+
+        return questions;
     }
 }
