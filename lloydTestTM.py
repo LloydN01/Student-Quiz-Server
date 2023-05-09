@@ -4,6 +4,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
+import ast
+
+# Read the login database
+with open('loginDB.txt', 'r') as file:
+    info = file.read()
+
+# Convert login details to python dictionaries
+loginDict = ast.literal_eval(info)
 
 # Get the host from the command line
 HOST = str(argv[1])
@@ -65,9 +73,24 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     userQuestions = [] # Stores the question in html format
     questionNumber = 0 # Stores the current question number
 
-    # Starting page -> Later replce with login page
+    # Login page
+    def login_page(self):
+        content = "<html><head><title>login</title></head>"
+        content += "<h1>Login</h1>"
+        content += "<form action='/index' method='post'>"
+        content += "<label for='username'>Username:</label><br>"
+        content += "<input type='text' id='username' name='username'><br><br>"
+        content += "<label for='password'>Password:</label><br>"
+        content += "<input type='password' id='password' name='password'><br><br>"
+        content += "<input type='submit' name='get-index-page' value='Login'>"
+        content += '</form>'
+        content += "</body></html>"
+
+        return content
+    
+    # Starting page -> get questions
     def index_page(self):
-        getQuestionsFromServer(randomiseQuestionNumbers())
+        getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
         content = "<html><head><title>localhost</title></head>"
         content += "<body>"
         content += "<p>Click to get 5 random questions.</p>"
@@ -133,8 +156,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/":
-            # Request the starting page
-            content = self.index_page()
+            # Request the login page
+            content = self.login_page()
             self._set_response(content)
         elif self.path == "/questions":
             self._set_response(self.userQuestions[self.questionNumber])
@@ -170,20 +193,27 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 elif questionType == "SA":
                     questionBody = question
                     self.userQuestions.append(self.shortAnswer(questionBody))
+            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
         elif 'next-question' in data:
             # Check that the question number is not the last question
             if MyHTTPRequestHandler.questionNumber < len(MyHTTPRequestHandler.userQuestions) - 1:
                 MyHTTPRequestHandler.questionNumber += 1
             else:
                 MyHTTPRequestHandler.questionNumber = 0
+            
+            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
         elif 'previous-question' in data:
             # Check that the question number is not the first question
             if MyHTTPRequestHandler.questionNumber > 0:
                 MyHTTPRequestHandler.questionNumber -= 1
             else:
                 MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
-        
-        self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+            
+            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+        elif 'get-index-page' in data:
+            content = self.index_page()
+            self._set_response(content)
+    
 
 def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
     server_address = ('', port)
