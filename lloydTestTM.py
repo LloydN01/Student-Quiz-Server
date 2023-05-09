@@ -231,10 +231,13 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
                 
                 self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
-            elif username in loginDict and loginDict[username] == password:
-                if 'get-index-page' in data:
-                    content = self.index_page()
-                    self._set_response(content)
+        elif username in loginDict and loginDict[username] == password:
+            if 'get-index-page' in data:
+                content = self.index_page()
+                self._set_response(content)
+        else:
+            content = self.login_page()
+            self._set_response(content)
 
     
 
