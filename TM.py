@@ -5,13 +5,21 @@ from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
 import ast
+import json
 
 # Read the login database
-with open('loginDB.txt', 'r') as file:
-    info = file.read()
+with open('loginDB.txt', 'r') as loginFile:
+    loginInfo = loginFile.read()
+
+# Read the user questions database
+with open('userQuestionsDB.txt', 'r') as questionFile:
+    questionsInfo = questionFile.read()
 
 # Convert login details to python dictionaries
-loginDict = ast.literal_eval(info)
+loginDict = ast.literal_eval(loginInfo)
+
+# # Convert user questions to python dictionaries
+# questionsDict = ast.literal_eval(questionsInfo)
 
 # Get the host from the command line
 HOST = str(argv[1])
@@ -52,14 +60,14 @@ def randomiseQuestionNumbers():
 # Send the request for questions to each server
 def getQuestionsFromServer(numQuestions):
     # Get the number of questions from each server
-        numJavaQuestions, numPythonQuestions = numQuestions
+    numJavaQuestions, numPythonQuestions = numQuestions
 
-        # Send the number of questions to each server
-        javaQB.sendall(bytes(str(numJavaQuestions) + "\n", "utf-8"))
-        pythonQB.sendall(bytes(str(numPythonQuestions) + "\n", "utf-8"))
+    # Send the number of questions to each server
+    javaQB.sendall(bytes(str(numJavaQuestions) + "\n", "utf-8"))
+    pythonQB.sendall(bytes(str(numPythonQuestions) + "\n", "utf-8"))
 
-        print("Asked for", numJavaQuestions, "questions to Java server")
-        print("Asked for", numPythonQuestions, "questions to Python server")
+    print("Asked for", numJavaQuestions, "questions to Java server")
+    print("Asked for", numPythonQuestions, "questions to Python server")
 
 def convertToMultipleChoice(question):
     # Split the question into the question and the answer
@@ -89,19 +97,23 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         return content
     
     # Starting page -> get questions
-    def index_page(self):
+    def index_page(self, username):
         getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
         content = "<html><head><title>localhost</title></head>"
         content += "<body>"
         content += "<p>Click to get 5 random questions.</p>"
         content += "<form action='/questions' method='post'>"
         content += "<input type='submit' name='get-questions' value='Randomise'>"
+
+        # Hidden username field to keep the username
+        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+
         content += "</form>"
         content += "</body></html>"
 
         return content
 
-    def multipleChoice(self, question, options):
+    def multipleChoice(self, question, options, username):
         questionNumber = len(self.userQuestions) + 1
         # Question
         content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
@@ -117,11 +129,15 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content += "<form method='post'>"
         content += "<input type='submit' name='previous-question' value='Previous Question'>"
         content += "<input type='submit' name='next-question' value='Next Question'>"
+
+        # Hidden username field to keep the username
+        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+
         content += "</form>"
 
         return "$MC$" + content
     
-    def shortAnswer(self, question):
+    def shortAnswer(self, question, username):
         questionNumber = len(self.userQuestions) + 1
         # Question
         content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
@@ -136,6 +152,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content += "<form method='post'>"
         content += "<input type='submit' name='previous-question' value='Previous Question'>"
         content += "<input type='submit' name='next-question' value='Next Question'>"
+
+        # Hidden username field to keep the username
+        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
         content += "</form>"
 
         return "$SA$" + content
@@ -169,8 +188,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8')
         data = parse_qs(post_data)
 
-        print("data: " + str(data))
-
         username = ""
         password = ""
         answer = ""
@@ -184,14 +201,15 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 username = value
             elif key == 'password':
                 password = value
-            elif key == 'answer':
+            elif key == 'message':
                 answer = value
+
+        print("Answer:", answer)
+        print("Name:", username)
 
         # Perform the login validation (e.g., check against a database)     
 
         if self.path == '/questions':
-            print("Answer:", answer)
-            print("Name:", username)
             if 'get-questions' in data:
                 # First time logging in, request the questions from the servers
                 # Wait for the questions to be received
@@ -210,10 +228,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     questionType, question = question.split("$", 1)
                     if questionType == "MC":
                         questionBody, options = convertToMultipleChoice(question)
-                        self.userQuestions.append(self.multipleChoice(questionBody, options))
+                        self.userQuestions.append(self.multipleChoice(questionBody, options, username))
                     elif questionType == "SA":
                         questionBody = question
-                        self.userQuestions.append(self.shortAnswer(questionBody))
+                        self.userQuestions.append(self.shortAnswer(questionBody, username))
                 self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
             elif 'next-question' in data:
                 # Check that the question number is not the last question
@@ -233,10 +251,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
         elif username in loginDict and loginDict[username] == password:
             if 'get-index-page' in data:
-                content = self.index_page()
+                content = self.index_page(username)
                 self._set_response(content)
         else:
-            content = self.login_page()
+            content = self.login_page() + "<p>Invalid username or password</p>"
             self._set_response(content)
 
     
