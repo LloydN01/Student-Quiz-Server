@@ -9,7 +9,6 @@ with open('loginDB.txt', 'r') as file:
 loginDict = ast.literal_eval(info)
 
 class S(BaseHTTPRequestHandler):
-    clients = {}
 
     def _set_response(self, page, username=''):
         self.send_response(200)
