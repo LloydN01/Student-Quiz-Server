@@ -128,7 +128,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content += "</form>"
 
         # Back and next buttons
-        content += "<form method='post'>"
+        content += "<form action='/questions' method='post'>"
         content += "<input type='submit' name='previous-question' value='Previous Question'>"
         content += "<input type='submit' name='next-question' value='Next Question'>"
 
@@ -151,7 +151,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content += "</form>"
 
         # Back and next buttons
-        content += "<form method='post'>"
+        content += "<form action='/questions' method='post'>"
         content += "<input type='submit' name='previous-question' value='Previous Question'>"
         content += "<input type='submit' name='next-question' value='Next Question'>"
 
@@ -183,15 +183,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             # Request the login page
             content = self.login_page()
             self._set_response(content)
-        elif self.path == "/questions":
-            self._set_response(self.userQuestions[self.questionNumber])
         else:
             self.send_error(404, "File not found {}".format(self.path))
-
-        """
-        elif self.path == "/questions":
-            self._set_response(self.userQuestions[self.questionNumber])
-        """
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
@@ -294,6 +287,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     currQuestionNum = questionsDict[username][1] # The question number that the user is currently on
                     currQuestionContent = questionsDict[username][2][currQuestionNum] # The question that the user is currently on
                     print("User {} has returned".format(username))
+                    print(currQuestionContent)
                     self._set_response(currQuestionContent)
         else:
             content = self.login_page() + "<p>Invalid username or password</p>"
