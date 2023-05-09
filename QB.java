@@ -44,11 +44,10 @@ public class QB {
             while(clientSocket.isConnected()){
                 // Read from client
                 String receivedString = reader.readLine();
-                System.out.println(receivedString);
                 if (receivedString.contains("$REQ$")){ // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                    System.out.println("It contains $REQ$");
+                    // "$REQ$" signifies the start of a request
+
                     String[] splited_input = receivedString.split("\\$"); // splits the string by $ (the flag)
-                    System.out.println(splited_input[splited_input.length-1]); 
                     int numQuestions = Integer.parseInt(splited_input[splited_input.length-1]); // parses the last element, which is the number to integer 
                     System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
     
@@ -61,6 +60,9 @@ public class QB {
                     writer.flush();
                     System.out.println("Questions sent to TM");
 
+                } else if (receivedString.contains("$ANS$")){
+                    // "$ANS$" signifies the start of an answer
+                    // TODO: Implement code to deal with recieving the user answers and marking it
                 }
             }
 
@@ -85,9 +87,15 @@ public class QB {
         String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
         ArrayList<String> questionsList = new ArrayList<String>();
 
+        int count = 0;
         while (line != null) {
-            questionsList.add(line);
+            questionsList.add(Integer.toString(count ++) + "$" + serverType + "$" + line);
             line = buffer.readLine();
+
+            // Each question will have the format [Question#]$[Language]$[MC]$[Question]$[Options]
+            // Example: 1$Java$MC$What is the capital of Canada?$Toronto,Ottawa,Vancouver,Montreal
+            // Or, for Short Answer questions (SA), the format will be [Question#]$[Language]$[SA]$[Question]
+            // Example: 2$Python$SA$What is the capital of Canada?
         }
 
         buffer.close();
