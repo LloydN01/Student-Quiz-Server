@@ -43,17 +43,25 @@ public class QB {
 
             while(clientSocket.isConnected()){
                 // Read from client
-                int numQuestions = Integer.parseInt(reader.readLine()); // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
+                String receivedString = reader.readLine();
+                System.out.println(receivedString);
+                if (receivedString.contains("$REQ$")){ // readLine() reads a line of text until it encounters a '\n' or '\r' character
+                    System.out.println("It contains $REQ$");
+                    String[] splited_input = receivedString.split("\\$"); // splits the string by $ (the flag)
+                    System.out.println(splited_input[splited_input.length-1]); 
+                    int numQuestions = Integer.parseInt(splited_input[splited_input.length-1]); // parses the last element, which is the number to integer 
+                    System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
+    
+                    // Generate random questions
+                    String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                    
+                    // Send custom message to client
+                    String questions = concatenateQuestions(randomQuestions);
+                    writer.println(questions);
+                    writer.flush();
+                    System.out.println("Questions sent to TM");
 
-                // Generate random questions
-                String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
-                
-                // Send custom message to client
-                String questions = concatenateQuestions(randomQuestions);
-                writer.println(questions);
-                writer.flush();
-                System.out.println("Questions sent to TM");
+                }
             }
 
             try {

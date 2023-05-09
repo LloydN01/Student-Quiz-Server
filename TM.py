@@ -62,9 +62,9 @@ def getQuestionsFromServer(numQuestions):
     # Get the number of questions from each server
     numJavaQuestions, numPythonQuestions = numQuestions
 
-    # Send the number of questions to each server
-    javaQB.sendall(bytes(str(numJavaQuestions) + "\n", "utf-8"))
-    pythonQB.sendall(bytes(str(numPythonQuestions) + "\n", "utf-8"))
+        # Send the number of questions to each server
+        javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
+        pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
@@ -143,7 +143,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
         content += "<form method='post'>"
         # Answer
-        content += "<textarea name='message' style='width: 550px; height: 250px;'></textarea>"
+        content += "<textarea name='message' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
         content += "<br>"
         content += "<input type='submit' value='Submit'>"
         content += "</form>"
