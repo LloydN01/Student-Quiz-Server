@@ -16,7 +16,7 @@ public class JavaQB {
             System.err.println("Could not listen on port: 9999.");
             System.exit(-1);
         }
-
+ 
         while (listening) {
             // wait for client connection
             Socket clientSocket = serverSocket.accept();

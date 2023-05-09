@@ -1,6 +1,7 @@
 import socket
 import select
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import unquote # To stop the http encoding messing with the message (ie. %24 -> $)
 from sys import argv
 
 HOST = str(argv[1])
@@ -45,7 +46,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
-        answer = post_data.decode() + '\n'
+        answer = unquote(post_data) + '\n'
+        print(answer)
         answer = answer[8:]
         print(answer)
         if "$J$" in answer:

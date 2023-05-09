@@ -5,6 +5,8 @@ import java.util.*;
 public class QB {
     public static int port;
     public static String serverType;
+    public static String locationOfQuestionFiles = "./Questions/";
+
     public static void main(String[] args) throws IOException {
         if (args[0].equals("-p")){
             port = 9998;
@@ -14,6 +16,8 @@ public class QB {
             port = 9999;
             serverType = "Java";
         }
+
+        String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
         
         ServerSocket serverSocket = null;
         boolean listening = true;
@@ -61,5 +65,24 @@ public class QB {
             break;
         }
         serverSocket.close();
+    }
+
+    // Function that reads a text file
+    public static String readFile(String fileName) throws IOException {
+        BufferedReader buffer = new BufferedReader(new FileReader(fileName));
+        try {
+            StringBuilder fileContent = new StringBuilder(); // Creates a mutable sequence of characters
+            String line = buffer.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
+
+            while (line != null) {
+                fileContent.append(line);
+                fileContent.append("\n");
+                line = buffer.readLine();
+            }
+
+            return fileContent.toString();
+        } finally {
+            buffer.close();
+        }
     }
 }
