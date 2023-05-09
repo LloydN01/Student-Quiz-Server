@@ -171,48 +171,71 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
         print("data: " + str(data))
 
-        if 'get-questions' in data:
-            # First time logging in, request the questions from the servers
-            # Wait for the questions to be received
-            readable, _ , _ = select.select(inputs, outputs, inputs)
-            listOfQuestions = []
-            for receivedData in readable:
-                receivedQuestion = receivedData.recv(1024)
-                if receivedQuestion:
-                    # print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
-                    listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
-            
-            # Remove ""s from the list created due to split function
-            listOfQuestions = list(filter(None, listOfQuestions))
+        username = ""
+        password = ""
+        answer = ""
 
-            for question in listOfQuestions:
-                questionType, question = question.split("$", 1)
-                if questionType == "MC":
-                    questionBody, options = convertToMultipleChoice(question)
-                    self.userQuestions.append(self.multipleChoice(questionBody, options))
-                elif questionType == "SA":
-                    questionBody = question
-                    self.userQuestions.append(self.shortAnswer(questionBody))
-            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
-        elif 'next-question' in data:
-            # Check that the question number is not the last question
-            if MyHTTPRequestHandler.questionNumber < len(MyHTTPRequestHandler.userQuestions) - 1:
-                MyHTTPRequestHandler.questionNumber += 1
-            else:
-                MyHTTPRequestHandler.questionNumber = 0
-            
-            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
-        elif 'previous-question' in data:
-            # Check that the question number is not the first question
-            if MyHTTPRequestHandler.questionNumber > 0:
-                MyHTTPRequestHandler.questionNumber -= 1
-            else:
-                MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
-            
-            self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
-        elif 'get-index-page' in data:
-            content = self.index_page()
-            self._set_response(content)
+        # Extract the username, password, and answer from the form data
+        params = post_data.split('&')
+        for param in params:
+            key, value = param.split('=')
+            # print(key + "and" + value)
+            if key == 'username':
+                username = value
+            elif key == 'password':
+                password = value
+            elif key == 'answer':
+                answer = value
+
+        # Perform the login validation (e.g., check against a database)     
+
+        if self.path == '/questions':
+            print("Answer:", answer)
+            print("Name:", username)
+            if 'get-questions' in data:
+                # First time logging in, request the questions from the servers
+                # Wait for the questions to be received
+                readable, _ , _ = select.select(inputs, outputs, inputs)
+                listOfQuestions = []
+                for receivedData in readable:
+                    receivedQuestion = receivedData.recv(1024)
+                    if receivedQuestion:
+                        # print('Received from', receivedData.getpeername()[1], ':\n', receivedQuestion.decode())
+                        listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
+                
+                # Remove ""s from the list created due to split function
+                listOfQuestions = list(filter(None, listOfQuestions))
+
+                for question in listOfQuestions:
+                    questionType, question = question.split("$", 1)
+                    if questionType == "MC":
+                        questionBody, options = convertToMultipleChoice(question)
+                        self.userQuestions.append(self.multipleChoice(questionBody, options))
+                    elif questionType == "SA":
+                        questionBody = question
+                        self.userQuestions.append(self.shortAnswer(questionBody))
+                self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+            elif 'next-question' in data:
+                # Check that the question number is not the last question
+                if MyHTTPRequestHandler.questionNumber < len(MyHTTPRequestHandler.userQuestions) - 1:
+                    MyHTTPRequestHandler.questionNumber += 1
+                else:
+                    MyHTTPRequestHandler.questionNumber = 0
+                
+                self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+            elif 'previous-question' in data:
+                # Check that the question number is not the first question
+                if MyHTTPRequestHandler.questionNumber > 0:
+                    MyHTTPRequestHandler.questionNumber -= 1
+                else:
+                    MyHTTPRequestHandler.questionNumber = len(MyHTTPRequestHandler.userQuestions) - 1
+                
+                self._set_response(self.userQuestions[MyHTTPRequestHandler.questionNumber])
+            elif username in loginDict and loginDict[username] == password:
+                if 'get-index-page' in data:
+                    content = self.index_page()
+                    self._set_response(content)
+
     
 
 def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
