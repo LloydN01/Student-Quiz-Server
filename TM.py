@@ -79,8 +79,13 @@ def convertToMultipleChoice(question):
     return (question, options)
 
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
-
-    # In the userQuestionsDB.txt -> {'username':[ completed? <True, False>, currentQuestion, [questionKey], [questions], [marks],  [attempt #]]}
+    # In the userQuestionsDB.txt -> {'username':{
+    #                                   completed: <Bool>, 
+    #                                   questionNum: <Int>, 
+    #                                   questions: [<List of questions>], 
+    #                                   questionKeys: [<List of question keys>], 
+    #                                   marks: [<List of marks>],
+    #                                   attempts: [<List of attempts>]}}
 
     # Login page
     def login_page(self):
@@ -116,7 +121,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         return content
 
     def multipleChoice(self, question, options, username):
-        questionNumber = len(questionsDict[username][3]) + 1 # questionsDict[username][3] is the list of questions
+        questionNumber = len(questionsDict[username]["questions"]) + 1
         # Question
         content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
         content += "<form method='post'>"
@@ -140,7 +145,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         return "$MC$" + content
     
     def shortAnswer(self, question, username):
-        questionNumber = len(questionsDict[username][3]) + 1 # questionsDict[username][3] is the list of questions
+        questionNumber = len(questionsDict[username]["questions"]) + 1
         # Question
         content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
         content += "<form method='post'>"
@@ -229,8 +234,20 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 listOfQuestions = list(filter(None, listOfQuestions))
 
                 # Intialise the new user's dictionary entries
-                # {'username':[ completed? <True, False>, currentQuestion, [questionKey], [questions], [marks],  [attempt #]]}
-                questionsDict[username] = [False, 0, [], [], [], []] # Create new entry for the user in Questions dictionary
+                # In the userQuestionsDB.txt -> {'username':{
+                #                                   completed: <Bool>, 
+                #                                   questionNum: <Int>, 
+                #                                   questions: [<List of questions>], 
+                #                                   questionKeys: [<List of question keys>], 
+                #                                   marks: [<List of marks>],
+                #                                   attempts: [<List of attempts>]}}
+                
+                questionsDict[username] = {"completed": False,
+                                           "questionNum": 0,
+                                           "questions": [],
+                                           "questionKeys": [],
+                                           "marks": [],
+                                           "attempts": []} # Create new entry for the user in Questions dictionary
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
@@ -238,42 +255,42 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     if questionType == "MC":
                         # If question is multiple choice
                         questionBody, options = convertToMultipleChoice(question)
-                        currUser[2].append(questionLang + questionNum)
-                        currUser[3].append(self.multipleChoice(questionBody, options, username))
+                        currUser["questionKeys"].append(questionLang + questionNum)
+                        currUser["questions"].append(self.multipleChoice(questionBody, options, username))
                     elif questionType == "SA":
                         # If question is short answer
                         questionBody = question
-                        currUser[2].append(questionLang + questionNum)
-                        currUser[3].append(self.shortAnswer(questionBody, username))
+                        currUser["questionKeys"].append(questionLang + questionNum)
+                        currUser["questions"].append(self.shortAnswer(questionBody, username))
 
-                currUser[4] = [0] * len(currUser[3]) # Initialise the marks to 0
-                currUser[5] = [1] * len(currUser[3]) # Initialise the attempt number to 1
+                currUser["marks"] = [0] * len(currUser["questions"]) # Initialise the marks to 0
+                currUser["attempts"] = [1] * len(currUser["questions"]) # Initialise the attempt number to 1
 
-                self._set_response(currUser[3][0]) # Send the first question to the user
+                self._set_response(currUser["questions"][0]) # Send the first question to the user
             elif 'next-question' in data:
                 # Check that the question number is not the last question
-                oldQuestionNumber = questionsDict[username][1]
-                userQuestions = questionsDict[username][3]
+                oldQuestionNumber = questionsDict[username]["questionNum"]
+                userQuestions = questionsDict[username]["questions"]
 
                 if oldQuestionNumber < len(userQuestions) - 1:
-                    questionsDict[username][1] += 1
+                    questionsDict[username]["questionNum"] += 1
                 else:
-                    questionsDict[username][1] = 0
+                    questionsDict[username]["questionNum"] = 0
 
-                newQuestionNumber = questionsDict[username][1]
+                newQuestionNumber = questionsDict[username]["questionNum"]
                 
                 self._set_response(userQuestions[newQuestionNumber])
             elif 'previous-question' in data:
                 # Check that the question number is not the first question
-                oldQuestionNumber = questionsDict[username][1]
-                userQuestions = questionsDict[username][3]
+                oldQuestionNumber = questionsDict[username]["questionNum"]
+                userQuestions = questionsDict[username]["questions"]
 
                 if oldQuestionNumber > 0:
-                    questionsDict[username][1] -= 1
+                    questionsDict[username]["questionNum"] -= 1
                 else:
-                    questionsDict[username][1] = len(userQuestions) - 1
+                    questionsDict[username]["questionNum"] = len(userQuestions) - 1
                 
-                newQuestionNumber = questionsDict[username][1]
+                newQuestionNumber = questionsDict[username]["questionNum"]
                 
                 self._set_response(userQuestions[newQuestionNumber])
         elif username in loginDict and loginDict[username] == password:
@@ -286,8 +303,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     self._set_response(content)
                 else:
                     # If user has received their questions already, redirect them to the questions page where they last left off
-                    currQuestionNum = questionsDict[username][1] # The question number that the user is currently on
-                    currQuestionContent = questionsDict[username][3][currQuestionNum] # The question that the user is currently on
+                    currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
+                    currQuestionContent = questionsDict[username]["questions"][currQuestionNum] # The question that the user is currently on
                     print("User {} has returned".format(username))
                     print(currQuestionContent)
                     self._set_response(currQuestionContent)
