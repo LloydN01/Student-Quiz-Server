@@ -223,9 +223,13 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 # First time logging in, request the questions from the servers
 
                 getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
-                print("waiting for questions")
+                
+                readable = []
                 # Wait for the questions to be received
-                readable, _ , _ = select.select(inputs, outputs, inputs)
+                while(True):
+                    readable, _ , _ = select.select(inputs, outputs, inputs)
+                    if len(readable) == len(inputs):
+                        break
                 
                 listOfQuestions = []
                 for receivedData in readable:
@@ -316,7 +320,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             content = self.login_page() + "<p>Invalid username or password</p>"
             self._set_response(content)
 
-    
 
 if __name__ == '__main__':
     port = 5000
