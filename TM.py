@@ -1,11 +1,12 @@
 import socket
 import select
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
 import ast
 import json
+import pdb
 
 # Read the login database
 with open('loginDB.txt', 'r') as loginFile:
@@ -307,16 +308,15 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     print("User {} has returned".format(username))
                     self._set_response(currQuestionContent)
         else:
-            content = self.login_page() + "<p>Invalid username or password</p>"
+            content = login_page() + "<p>Invalid username or password</p>"
             self._set_response(content)
 
     
 
-def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print('Starting httpd on port', port)
-    httpd.serve_forever()
 
 if __name__ == '__main__':
-    run()
+    port = 5000
+    server_address = ('', port)
+    httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
+    print('Starting httpd on port', port)
+    httpd.serve_forever()
