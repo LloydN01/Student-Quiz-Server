@@ -54,10 +54,17 @@ public class QB {
                     // Generate random questions
                     String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
                     
-                    // Send custom message to client
-                    String questions = concatenateQuestions(randomQuestions);
-                    writer.println(questions);
-                    writer.flush();
+                    // // Send custom message to client
+                    // String questions = concatenateQuestions(randomQuestions);
+                    // writer.println(questions);
+                    // writer.flush();
+
+                    for(int i = 0; i < randomQuestions.length; i++){
+                        writer.println(randomQuestions[i]);
+                        writer.flush();
+                        reader.readLine();  // Wait for ack
+                    }
+
                     System.out.println("Questions sent to TM");
 
                 } else if (receivedString.contains("$ANS$")){

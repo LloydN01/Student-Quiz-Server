@@ -6,7 +6,6 @@ from sys import argv
 import random
 import ast
 import json
-import pdb
 
 # Read the login database
 with open('loginDB.txt', 'r') as loginFile:
@@ -44,9 +43,9 @@ pythonQB.connect((HOST, PYTHON_PORT))
 if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
     print("Connected to both servers")
 
-# Set the sockets to non-blocking
-javaQB.setblocking(False)
-pythonQB.setblocking(False)
+# # Set the sockets to non-blocking
+# javaQB.setblocking(False)
+# pythonQB.setblocking(False)
 
 # Add the sockets to the list of inputs
 inputs = [javaQB, pythonQB]
@@ -61,13 +60,25 @@ def randomiseQuestionNumbers():
     return (numFromJava, numFromPython)
 
 # Send the request for questions to each server
-def getQuestionsFromServer(numQuestions):
+def getQuestionsFromServer(numQuestions, myList):
     # Get the number of questions from each server
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
     javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
     pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
+
+    select.select(inputs, outputs, inputs)
+
+    for i in range(numJavaQuestions):
+        # Receive the question from the server
+        question = javaQB.recv(1024).decode("utf-8")
+        myList.append(question)
+
+    for i in range(numPythonQuestions):
+        # Receive the question from the server
+        question = pythonQB.recv(1024).decode("utf-8")
+        myList.append(question)
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
@@ -169,6 +180,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     #                                   marks: [<List of marks>],
     #                                   attempts: [<List of attempts>]}}
 
+
+    listOfQuestions = []
+
     def _set_response(self, content):
         # Everytime a request is made, the userQuestionsDB.txt file is updated
         with open("userQuestionsDB.txt", "w") as questionsDB:
@@ -221,14 +235,16 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 # First time logging in, request the questions from the servers
 
                 # Wait for the questions to be received
-                readable, _ , _ = select.select(inputs, outputs, inputs, 0.5)
+                readable, _ , _ = select.select(inputs, outputs, inputs)
 
-                listOfQuestions = []
-                for receivedData in readable:
-                    receivedQuestion = receivedData.recv(1024)
-                    if receivedQuestion:
-                        listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
+
+                # for receivedData in readable:
+                #     receivedQuestion = receivedData.recv(2048)
+                #     if receivedQuestion:
+                #         listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
                 
+                readable[0].recv(2048)
+
                 # Remove ""s from the list created due to split function
                 listOfQuestions = list(filter(None, listOfQuestions))
 
@@ -250,6 +266,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
+                    print("Question packet: " + questionPacket)
+
                     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
                     if questionType == "MC":
                         # If question is multiple choice
