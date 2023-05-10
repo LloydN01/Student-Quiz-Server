@@ -303,7 +303,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
                     currQuestionContent = questionsDict[username]["questions"][currQuestionNum] # The question that the user is currently on
                     print("User {} has returned".format(username))
-                    print(currQuestionContent)
                     self._set_response(currQuestionContent)
         else:
             content = self.login_page() + "<p>Invalid username or password</p>"
