@@ -43,9 +43,9 @@ pythonQB.connect((HOST, PYTHON_PORT))
 if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
     print("Connected to both servers")
 
-# Set the sockets to non-blocking
-javaQB.setblocking(False)
-pythonQB.setblocking(False)
+# # Set the sockets to non-blocking
+# javaQB.setblocking(False)
+# pythonQB.setblocking(False)
 
 # Add the sockets to the list of inputs
 inputs = [javaQB, pythonQB]
@@ -60,13 +60,36 @@ def randomiseQuestionNumbers():
     return (numFromJava, numFromPython)
 
 # Send the request for questions to each server
-def getQuestionsFromServer(numQuestions):
+def getQuestionsFromServer(numQuestions, myList):
     # Get the number of questions from each server
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
     javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
     pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
+
+    qbs = [javaQB,pythonQB]
+    pqs = []
+    jqs = []
+    r,w,e = select.select(qbs,[],qbs)
+    while qbs: 
+        for host in r: 
+            q = host.recv(1024).decode() 
+            if host is javaQB: 
+                #ADD PARSED QS TO DB 
+                jqs += parse_qs
+                if (len(jqs) == numJavaQuestions): 
+                    qbs.remove(host)
+            elif host is pythonQB: 
+                #ADD PARSED QS TO DB
+                pqs+= parse_qs
+                if (len(pqs) == numPythonQuestions): 
+                    qbs.remove(host)
+        for host in e: 
+            qbs.remove(host)
+           
+                
+
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
@@ -167,6 +190,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     #                                   marks: [<List of marks>],
     #                                   attempts: [<List of attempts>]}}
 
+
+    listOfQuestions = []
+
     def _set_response(self, content):
         # Everytime a request is made, the userQuestionsDB.txt file is updated
         with open("userQuestionsDB.txt", "w") as questionsDB:
@@ -199,9 +225,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
         username = ""
         password = ""
-        answer = ""
 
-        # Extract the username, password, and answer from the form data
+        # Extract the username and password from the form data
         params = post_data.split('&')
         for param in params:
             key, value = param.split('=')
@@ -210,12 +235,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 username = value
             elif key == 'password':
                 password = value
-            elif key == 'message':
-                answer = value
 
         print("Name:", username)
 
-        # Perform the login validation (e.g., check against a database)     
 
         if self.path == '/questions':
             if 'get-questions' in data:
@@ -238,6 +260,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                         print(receivedQuestion.decode())
                         listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
                 
+                readable[0].recv(2048)
+
                 # Remove ""s from the list created due to split function
                 listOfQuestions = list(filter(None, listOfQuestions))
 
@@ -259,6 +283,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
+                    print("Question packet: " + questionPacket)
+
                     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
                     if questionType == "MC":
                         # If question is multiple choice
@@ -302,6 +328,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
         elif username in loginDict and loginDict[username] == password:
+            # Perform the login validation (e.g., check against a database)  
             if 'get-index-page' in data:
                 if username not in questionsDict:
                     # If user does not exist in the Questions dictionary, redirect them to the index page
@@ -314,7 +341,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
                     currQuestionContent = questionsDict[username]["questions"][currQuestionNum] # The question that the user is currently on
                     print("User {} has returned".format(username))
-                    print(currQuestionContent)
                     self._set_response(currQuestionContent)
         else:
             content = login_page() + "<p>Invalid username or password</p>"
