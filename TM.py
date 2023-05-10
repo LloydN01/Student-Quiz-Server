@@ -198,9 +198,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
         username = ""
         password = ""
-        answer = ""
 
-        # Extract the username, password, and answer from the form data
+        # Extract the username and password from the form data
         params = post_data.split('&')
         for param in params:
             key, value = param.split('=')
@@ -209,12 +208,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 username = value
             elif key == 'password':
                 password = value
-            elif key == 'message':
-                answer = value
 
         print("Name:", username)
 
-        # Perform the login validation (e.g., check against a database)     
 
         if self.path == '/questions':
             if 'get-questions' in data:
@@ -294,6 +290,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
         elif username in loginDict and loginDict[username] == password:
+            # Perform the login validation (e.g., check against a database)  
             if 'get-index-page' in data:
                 if username not in questionsDict:
                     # If user does not exist in the Questions dictionary, redirect them to the index page
