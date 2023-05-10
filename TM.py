@@ -78,6 +78,87 @@ def convertToMultipleChoice(question):
     
     return (question, options)
 
+# Creates the HTML for the login page
+def login_page():
+    content = "<html><head><title>login</title></head>"
+    content += "<h1>Login</h1>"
+    content += "<form action='/index' method='post'>"
+    content += "<label for='username'>Username:</label><br>"
+    content += "<input type='text' id='username' name='username'><br><br>"
+    content += "<label for='password'>Password:</label><br>"
+    content += "<input type='password' id='password' name='password'><br><br>"
+    content += "<input type='submit' name='get-index-page' value='Login'>"
+    content += '</form>'
+    content += "</body></html>"
+
+    return content
+
+# Starting page -> get questions
+def index_page(username):
+    # Request the questions from the servers so that they are ready for the next POST request
+    getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
+    content = "<html><head><title>localhost</title></head>"
+    content += "<body>"
+    content += "<p>Click to get 5 random questions.</p>"
+    content += "<form action='/questions' method='post'>"
+    content += "<input type='submit' name='get-questions' value='Randomise'>"
+
+    # Hidden username field to keep the username
+    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+
+    content += "</form>"
+    content += "</body></html>"
+
+    return content
+
+# Creates the HTML for the multiple choice question
+def multipleChoice(question, options, username):
+    questionNumber = len(questionsDict[username]["questions"]) + 1
+    # Question
+    content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
+    content += "<form method='post'>"
+    # Options
+    for option in options:
+        content += "<input type='radio' id='{}' name='message' value='{}'>".format(option, option)
+        content += "<label for='{}'>{}</label><br>".format(option, option)
+    content += "<input type='submit' value='Submit'>"
+    content += "</form>"
+
+    # Back and next buttons
+    content += "<form action='/questions' method='post'>"
+    content += "<input type='submit' name='previous-question' value='Previous Question'>"
+    content += "<input type='submit' name='next-question' value='Next Question'>"
+
+    # Hidden username field to keep the username
+    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+
+    content += "</form>"
+
+    return "$MC$" + content
+
+# Creates the HTML for the short answer question
+def shortAnswer(question, username):
+    questionNumber = len(questionsDict[username]["questions"]) + 1
+    # Question
+    content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
+    content += "<form method='post'>"
+    # Answer
+    content += "<textarea name='message' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
+    content += "<br>"
+    content += "<input type='submit' value='Submit'>"
+    content += "</form>"
+
+    # Back and next buttons
+    content += "<form action='/questions' method='post'>"
+    content += "<input type='submit' name='previous-question' value='Previous Question'>"
+    content += "<input type='submit' name='next-question' value='Next Question'>"
+
+    # Hidden username field to keep the username
+    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+    content += "</form>"
+
+    return "$SA$" + content
+
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # In the userQuestionsDB.txt -> {'username':{
     #                                   completed: <Bool>, 
@@ -86,85 +167,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     #                                   questionKeys: [<List of question keys>], 
     #                                   marks: [<List of marks>],
     #                                   attempts: [<List of attempts>]}}
-
-    # Login page
-    def login_page(self):
-        content = "<html><head><title>login</title></head>"
-        content += "<h1>Login</h1>"
-        content += "<form action='/index' method='post'>"
-        content += "<label for='username'>Username:</label><br>"
-        content += "<input type='text' id='username' name='username'><br><br>"
-        content += "<label for='password'>Password:</label><br>"
-        content += "<input type='password' id='password' name='password'><br><br>"
-        content += "<input type='submit' name='get-index-page' value='Login'>"
-        content += '</form>'
-        content += "</body></html>"
-
-        return content
-    
-    # Starting page -> get questions
-    def index_page(self, username):
-        # Request the questions from the servers so that they are ready for the next POST request
-        getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
-        content = "<html><head><title>localhost</title></head>"
-        content += "<body>"
-        content += "<p>Click to get 5 random questions.</p>"
-        content += "<form action='/questions' method='post'>"
-        content += "<input type='submit' name='get-questions' value='Randomise'>"
-
-        # Hidden username field to keep the username
-        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-
-        content += "</form>"
-        content += "</body></html>"
-
-        return content
-
-    def multipleChoice(self, question, options, username):
-        questionNumber = len(questionsDict[username]["questions"]) + 1
-        # Question
-        content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
-        content += "<form method='post'>"
-        # Options
-        for option in options:
-            content += "<input type='radio' id='{}' name='message' value='{}'>".format(option, option)
-            content += "<label for='{}'>{}</label><br>".format(option, option)
-        content += "<input type='submit' value='Submit'>"
-        content += "</form>"
-
-        # Back and next buttons
-        content += "<form action='/questions' method='post'>"
-        content += "<input type='submit' name='previous-question' value='Previous Question'>"
-        content += "<input type='submit' name='next-question' value='Next Question'>"
-
-        # Hidden username field to keep the username
-        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-
-        content += "</form>"
-
-        return "$MC$" + content
-    
-    def shortAnswer(self, question, username):
-        questionNumber = len(questionsDict[username]["questions"]) + 1
-        # Question
-        content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
-        content += "<form method='post'>"
-        # Answer
-        content += "<textarea name='message' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
-        content += "<br>"
-        content += "<input type='submit' value='Submit'>"
-        content += "</form>"
-
-        # Back and next buttons
-        content += "<form action='/questions' method='post'>"
-        content += "<input type='submit' name='previous-question' value='Previous Question'>"
-        content += "<input type='submit' name='next-question' value='Next Question'>"
-
-        # Hidden username field to keep the username
-        content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-        content += "</form>"
-
-        return "$SA$" + content
 
     def _set_response(self, content):
         # Everytime a request is made, the userQuestionsDB.txt file is updated
@@ -186,7 +188,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             # Request the login page
-            content = self.login_page()
+            content = login_page()
             self._set_response(content)
         else:
             self.send_error(404, "File not found {}".format(self.path))
@@ -252,12 +254,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                         # If question is multiple choice
                         questionBody, options = convertToMultipleChoice(question)
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(self.multipleChoice(questionBody, options, username))
+                        currUser["questions"].append(multipleChoice(questionBody, options, username))
                     elif questionType == "SA":
                         # If question is short answer
                         questionBody = question
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(self.shortAnswer(questionBody, username))
+                        currUser["questions"].append(shortAnswer(questionBody, username))
 
                 currUser["marks"] = [0] * len(currUser["questions"]) # Initialise the marks to 0
                 currUser["attempts"] = [1] * len(currUser["questions"]) # Initialise the attempt number to 1
@@ -296,7 +298,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # If user does not exist in the Questions dictionary, redirect them to the index page
                     # These users have not received their questions yet
                     print("New user {} has been added".format(username))
-                    content = self.index_page(username)
+                    content = index_page(username)
                     self._set_response(content)
                 else:
                     # If user has received their questions already, redirect them to the questions page where they last left off
