@@ -71,9 +71,10 @@ def getQuestionsFromServer(numQuestions, myList):
     qbs = [javaQB,pythonQB]
     pqs = []
     jqs = []
-    r,w,e = select.select(qbs,[],[])
+    r,w,e = select.select(qbs,[],qbs)
     while qbs: 
         for host in r: 
+            q = host.recv(1024).decode() 
             if host is javaQB: 
                 #ADD PARSED QS TO DB 
                 jqs += parse_qs
