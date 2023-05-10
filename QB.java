@@ -43,6 +43,7 @@ public class QB {
 
             while(clientSocket.isConnected()){
                 // Read from client
+                // TODO redo this shit (SUNNY JOB)
                 String receivedString = reader.readLine();
                 if (receivedString.contains("$REQ$")){ // readLine() reads a line of text until it encounters a '\n' or '\r' character
                     // "$REQ$" signifies the start of a request
@@ -60,7 +61,10 @@ public class QB {
                     writer.flush();
                     System.out.println("Questions sent to TM");
 
-                } else if (receivedString.contains("$ANS$")){
+                } else if (receivedString.contains("$MCQ$")){
+                    // "$ANS$" signifies the start of an answer
+                    // TODO: Implement code to deal with recieving the user answers and marking it
+                } else if (receivedString.contains("$SAQ$")){
                     // "$ANS$" signifies the start of an answer
                     // TODO: Implement code to deal with recieving the user answers and marking it
                 }

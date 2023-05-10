@@ -1,6 +1,6 @@
 import socket
 import select
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
@@ -27,7 +27,6 @@ loginDict = ast.literal_eval(loginInfo)
 HOST = str(argv[1])
 
 # Set the ports
-PORT = 5000
 JAVA_PORT = 9999
 PYTHON_PORT = 9998
 
@@ -95,8 +94,6 @@ def login_page():
 
 # Starting page -> get questions
 def index_page(username):
-    # Request the questions from the servers so that they are ready for the next POST request
-    getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
     content = "<html><head><title>localhost</title></head>"
     content += "<body>"
     content += "<p>Click to get 5 random questions.</p>"
@@ -211,20 +208,25 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             elif key == 'password':
                 password = value
 
-        print("Name:", username)
-
+        print("Name:", username) 
 
         if self.path == '/questions':
             if 'get-questions' in data:
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
                 # First time logging in, request the questions from the servers
-
-                # Wait for the questions to be received
-                readable, _ , _ = select.select(inputs, outputs, inputs, 0.5)
-
+                getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
+                
+                readable = []
+                # Wait for the questions to be received from both JavaQB and PythonQB
+                while(True):
+                    readable, _ , _ = select.select(inputs, outputs, inputs)
+                    if len(readable) == len(inputs):
+                        # Only breaks out of the while loop when questions from both the Java and Python QB have been read
+                        break
+                
                 listOfQuestions = []
                 for receivedData in readable:
-                    receivedQuestion = receivedData.recv(1024)
+                    receivedQuestion = receivedData.recv(2048)
                     if receivedQuestion:
                         listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
                 
@@ -292,7 +294,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
         elif username in loginDict and loginDict[username] == password:
-            # Perform the login validation (e.g., check against a database)  
+            # Perform the login validation (e.g., check against a database)    
             if 'get-index-page' in data:
                 if username not in questionsDict:
                     # If user does not exist in the Questions dictionary, redirect them to the index page
@@ -307,16 +309,13 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     print("User {} has returned".format(username))
                     self._set_response(currQuestionContent)
         else:
-            content = self.login_page() + "<p>Invalid username or password</p>"
+            content = login_page() + "<p>Invalid username or password</p>"
             self._set_response(content)
 
-    
-
-def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print('Starting httpd on port', port)
-    httpd.serve_forever()
 
 if __name__ == '__main__':
-    run()
+    port = 5000
+    server_address = ('', port)
+    httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
+    print('Starting httpd on port', port)
+    httpd.serve_forever()
