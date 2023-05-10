@@ -27,7 +27,6 @@ loginDict = ast.literal_eval(loginInfo)
 HOST = str(argv[1])
 
 # Set the ports
-PORT = 5000
 JAVA_PORT = 9999
 PYTHON_PORT = 9998
 
