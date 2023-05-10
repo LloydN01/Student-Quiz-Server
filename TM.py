@@ -1,6 +1,6 @@
 import socket
 import select
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
@@ -96,7 +96,6 @@ def login_page():
 # Starting page -> get questions
 def index_page(username):
     # Request the questions from the servers so that they are ready for the next POST request
-    getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
     content = "<html><head><title>localhost</title></head>"
     content += "<body>"
     content += "<p>Click to get 5 random questions.</p>"
@@ -223,13 +222,16 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
                 # First time logging in, request the questions from the servers
 
+                getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
+                print("waiting for questions")
                 # Wait for the questions to be received
-                readable, _ , _ = select.select(inputs, outputs, inputs, 0.5)
-
+                readable, _ , _ = select.select(inputs, outputs, inputs)
+                
                 listOfQuestions = []
                 for receivedData in readable:
-                    receivedQuestion = receivedData.recv(1024)
+                    receivedQuestion = receivedData.recv(2048)
                     if receivedQuestion:
+                        print(receivedQuestion.decode())
                         listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
                 
                 # Remove ""s from the list created due to split function
@@ -316,11 +318,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
     
 
-def run(server_class=HTTPServer, handler_class=MyHTTPRequestHandler, port=5000):
+if __name__ == '__main__':
+    port = 5000
     server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
+    httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
     print('Starting httpd on port', port)
     httpd.serve_forever()
-
-if __name__ == '__main__':
-    run()
