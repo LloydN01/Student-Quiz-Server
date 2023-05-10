@@ -68,17 +68,27 @@ def getQuestionsFromServer(numQuestions, myList):
     javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
     pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
 
-    select.select(inputs, outputs, inputs)
+    qbs = [javaQB,pythonQB]
+    pqs = []
+    jqs = []
+    r,w,e = select.select(qbs,[],[])
+    while qbs: 
+        for host in r: 
+            if host is javaQB: 
+                #ADD PARSED QS TO DB 
+                jqs += parse_qs
+                if (len(jqs) == numJavaQuestions): 
+                    qbs.remove(host)
+            elif host is pythonQB: 
+                #ADD PARSED QS TO DB
+                pqs+= parse_qs
+                if (len(pqs) == numPythonQuestions): 
+                    qbs.remove(host)
+        for host in e: 
+            qbs.remove(host)
+           
+                
 
-    for i in range(numJavaQuestions):
-        # Receive the question from the server
-        question = javaQB.recv(1024).decode("utf-8")
-        myList.append(question)
-
-    for i in range(numPythonQuestions):
-        # Receive the question from the server
-        question = pythonQB.recv(1024).decode("utf-8")
-        myList.append(question)
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
