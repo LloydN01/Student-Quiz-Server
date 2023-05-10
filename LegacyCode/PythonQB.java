@@ -1,39 +1,40 @@
+package LegacyCode;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class JavaServer {
+public class PythonQB {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         boolean listening = true;
 
         try {
-            serverSocket = new ServerSocket(9999); // set port number
+            serverSocket = new ServerSocket(9998); // set port number
             // Print Server Port Number
-            System.out.println("Server started on port 9999");
+            System.out.println("Server started on port 9998");
         } catch (IOException e) {
-            System.err.println("Could not listen on port: 9999.");
+            System.err.println("Could not listen on port: 9998.");
             System.exit(-1);
         }
- 
+
         while (listening) {
             // wait for client connection
             Socket clientSocket = serverSocket.accept();
             System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
             // Create a new thread for the client
-            ClientThread clientThread = new ClientThread(clientSocket);
+            ClientThread2 clientThread = new ClientThread2(clientSocket);
             clientThread.start();
         }
         serverSocket.close();
     }
 }
 
-class ClientThread extends Thread {
+class ClientThread2 extends Thread {
     private Socket clientSocket = null;
 
-    public ClientThread(Socket socket) {
-        super("ClientThread");
+    public ClientThread2(Socket socket) {
+        super("ClientThread2");
         clientSocket = socket;
     }
 
@@ -52,7 +53,7 @@ class ClientThread extends Thread {
                 String receivedLine = reader.readLine(); // readLine() reads a line of text until it encounters a '\n' or '\r' character
                 System.out.println("Received message from client: " + receivedLine);
 
-                // Send customer message to client
+                // Send custom message to client
                 System.out.print("Enter message to send to client: ");
                 String sendLine = scanner.nextLine();
                 writer.println(sendLine);
