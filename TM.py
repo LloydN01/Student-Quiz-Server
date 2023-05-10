@@ -317,7 +317,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     print(currQuestionContent)
                     self._set_response(currQuestionContent)
         else:
-            content = self.login_page() + "<p>Invalid username or password</p>"
+            content = login_page() + "<p>Invalid username or password</p>"
             self._set_response(content)
 
 
