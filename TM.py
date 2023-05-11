@@ -116,13 +116,11 @@ def multipleChoice(question, options, username):
     content += "<form method='post'>"
     # Options
     for option in options:
-        content += "<input type='radio' id='{}' name='message' value='{}'>".format(option, option)
+        content += "<input type='radio' id='{}' name='answer' value='{}'>".format(option, option)
         content += "<label for='{}'>{}</label><br>".format(option, option)
-    content += "<input type='submit' value='Submit'>"
-    content += "</form>"
+    content += "<input type='submit' name='submit-answer' value='Submit'>"
 
     # Back and next buttons
-    content += "<form action='/questions' method='post'>"
     content += "<input type='submit' name='previous-question' value='Previous Question'>"
     content += "<input type='submit' name='next-question' value='Next Question'>"
 
@@ -140,13 +138,11 @@ def shortAnswer(question, username):
     content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
     content += "<form method='post'>"
     # Answer
-    content += "<textarea name='message' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
+    content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
     content += "<br>"
-    content += "<input type='submit' value='Submit'>"
-    content += "</form>"
+    content += "<input type='submit' name='submit-answer' value='Submit'>"
 
     # Back and next buttons
-    content += "<form action='/questions' method='post'>"
     content += "<input type='submit' name='previous-question' value='Previous Question'>"
     content += "<input type='submit' name='next-question' value='Next Question'>"
 
@@ -293,6 +289,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 newQuestionNumber = questionsDict[username]["questionNum"]
                 
                 self._set_response(userQuestions[newQuestionNumber])
+            elif 'submit-answer' in data:
+                
+                print("Answer chosen by user: " + str(data['answer']))
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
             if 'get-index-page' in data:
