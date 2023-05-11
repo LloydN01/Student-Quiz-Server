@@ -112,6 +112,25 @@ def shortAnswer(question, username, questionKey):
 
     return "$SA$" + content
 
+# Creates the HTML that displays the current user mark (if question is completed) or the attempt number (if question is incomplete)
+def generateCurrentStatus(mark, attempt):
+    print(mark, attempt)
+    content = "<p>Current Status: "
+    if attempt > 3:
+        content += "FAILED <br> You have failed this question 3 times. Please move on to the next question. </p>"
+    elif mark > 0:
+        content += "PASSED</p>"
+
+    content += "<p>Attempt Number: "
+    if attempt > 3:
+        content += "3 </p>"
+    else:
+        content += str(attempt) + "</p>"
+    
+    content += "<p> Current Mark: " + str(mark) + "</p>"
+
+    return content
+
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # In the userQuestionsDB.txt -> {'username':{
     #                                   completed: <Bool>, 
@@ -218,7 +237,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                         currUser["questions"].append(shortAnswer(questionBody, username, questionLang + questionNum))
 
                 currUser["marks"] = [0] * len(currUser["questions"]) # Initialise the marks to 0
-                currUser["attempts"] = [1] * len(currUser["questions"]) # Initialise the attempt number to 1
+                currUser["attempts"] = [0] * len(currUser["questions"]) # Initialise the attempt number to 0
 
                 self._set_response(currUser["questions"][0]) # Send the first question to the user
             elif 'next-question' in data:
@@ -272,17 +291,28 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 # Wait for the answer to be received from the QB
                 marked = []
                 marked, _ , _ = select.select(inputs, outputs, inputs)
+                receivedMark = marked[0].recv(1024).decode().strip() # Either "correct" or "wrong"
+
+                currentMark = questionsDict[username]["marks"][questionsDict[username]["questionNum"]]
+                currentAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
                 
-                receivedMark = marked[0].recv(1024)
-                if receivedMark:
-                    print(receivedMark.decode())
-                    # TODO MAKE SHIT
+                if receivedMark == "correct":
+                    # If the answer is correct, increment the marks
+                    questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 3 - currentAttempt
+                    questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1
+                elif receivedMark == "wrong":
+                    # If the answer is wrong, increment the attempts
+                    questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1
                 
+                newMark = questionsDict[username]["marks"][questionsDict[username]["questionNum"]]
+                newAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
 
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
-                self._set_response(userQuestions[currQuestionNum]) # After submitting their answer, the page should stay on the same question
+                questionsDict[username]["questions"][currQuestionNum] = userQuestions[currQuestionNum] + generateCurrentStatus(newMark, newAttempt) # Add the current status to the question body
+
+                self._set_response(questionsDict[username]["questions"][currQuestionNum]) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
