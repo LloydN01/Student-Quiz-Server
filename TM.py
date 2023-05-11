@@ -7,6 +7,7 @@ import random
 import ast
 import json
 
+# TODO: Figure out why the below empty lists are there
 # Add the sockets to the list of inputs
 inputs = []
 outputs = []
@@ -254,23 +255,28 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
             elif 'submit-answer' in data:
-                # theQuestionTypeandIndex = str(data["questionKey"]).rfind('$')
-                # #java5
-                # serverToSend = "JAVA" if "Java" in theQuestionTypeandIndex else "Python"
-                # id = theQuestionTypeandIndex.replace("Java","")
-                # id = theQuestionTypeandIndex.replace("Python","")
+                # Send user submitted answer to the correct QB
+                # If questionKey contains Java -> JavaQB if Python -> PythonQB
+                # Answer will comeback as either "correct" or "wrong"
 
                 # userAnswer = str(data["answer"])
                 questionKey = str(data["questionKey"][0])
                 userAnswer = str(data["answer"][0])
-
+                isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
                 id = ""
                 if "Java" in questionKey:
+                    isJavaQB = True
                     id = questionKey.replace('Java',"",1)
                 elif "Python" in questionKey:
                     id = questionKey.replace('Python',"",1)
 
-                print(id + "$" + userAnswer)
+                answerToQB = id + "$" + userAnswer
+
+                if isJavaQB:
+                    javaQB.sendall(answerToQB, "utf-8"))
+                else:
+                    pythonQB.sendall(answerToQB, "utf-8"))
+
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
