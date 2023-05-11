@@ -70,7 +70,7 @@ def index_page(username):
     return content
 
 # Creates the HTML for the multiple choice question
-def multipleChoice(question, options, username):
+def multipleChoice(question, options, username, questionKey):
     questionNumber = len(questionsDict[username]["questions"]) + 1
     # Question
     content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
@@ -88,12 +88,15 @@ def multipleChoice(question, options, username):
     # Hidden username field to keep the username
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
 
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
+
     content += "</form>"
 
     return "$MC$" + content
 
 # Creates the HTML for the short answer question
-def shortAnswer(question, username):
+def shortAnswer(question, username, questionKey):
     questionNumber = len(questionsDict[username]["questions"]) + 1
     # Question
     content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
@@ -109,6 +112,9 @@ def shortAnswer(question, username):
 
     # Hidden username field to keep the username
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
     content += "</form>"
 
     return "$SA$" + content
@@ -213,12 +219,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                         # If question is multiple choice
                         questionBody, options = convertToMultipleChoice(question)
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(multipleChoice(questionBody, options, username))
+                        currUser["questions"].append(multipleChoice(questionBody, options, username, questionLang + questionNum))
                     elif questionType == "SA":
                         # If question is short answer
                         questionBody = question
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(shortAnswer(questionBody, username))
+                        currUser["questions"].append(shortAnswer(questionBody, username, questionLang + questionNum))
 
                 currUser["marks"] = [0] * len(currUser["questions"]) # Initialise the marks to 0
                 currUser["attempts"] = [1] * len(currUser["questions"]) # Initialise the attempt number to 1
