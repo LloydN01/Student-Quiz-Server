@@ -13,7 +13,7 @@ public class QB {
             port = 9998;
             serverType = "Python";
         }
-        else{
+        else if (args[0].equals("-j")){
             port = 9999;
             serverType = "Java";
         }
@@ -44,29 +44,50 @@ public class QB {
             while(clientSocket.isConnected()){
                 // Read from client
                 // TODO redo this shit (SUNNY JOB)
-                String receivedString = reader.readLine();
-                if (receivedString.contains("$REQ$")){ // readLine() reads a line of text until it encounters a '\n' or '\r' character
-                    // "$REQ$" signifies the start of a request
+                String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
+                String flag = receivedString.substring(0, 5); //get the flag
+                receivedString = receivedString.substring(5); //remove the flag from the string
 
-                    String[] splited_input = receivedString.split("\\$"); // splits the string by $ (the flag)
-                    int numQuestions = Integer.parseInt(splited_input[splited_input.length-1]); // parses the last element, which is the number to integer 
-                    System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
-    
-                    // Generate random questions
-                    String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
-                    
-                    // Send custom message to client
-                    String questions = concatenateQuestions(randomQuestions);
-                    writer.println(questions);
-                    writer.flush();
-                    System.out.println("Questions sent to TM");
+                switch (flag){
+                        //Requesting Questions
+                        //Format is n - where n is the number of questions requested
+                        case "$REQ$":
+                            int numQuestions = Integer.parseInt(receivedString);
+                            System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
 
-                } else if (receivedString.contains("$MCQ$")){
-                    // "$ANS$" signifies the start of an answer
-                    // TODO: Implement code to deal with recieving the user answers and marking it
-                } else if (receivedString.contains("$SAQ$")){
-                    // "$ANS$" signifies the start of an answer
-                    // TODO: Implement code to deal with recieving the user answers and marking it
+                            // Generate random questions
+                            String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                            
+                            // Send custom message to client
+                            String questions = concatenateQuestions(randomQuestions);
+                            writer.println(questions);
+                            writer.flush();
+                            System.out.println("Questions sent to TM");
+                            break;
+                        //Marking a multiple choice question
+                        //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
+                        case "$MCQ$":
+                            String[] splittedStrings = receivedString.split("\\$");
+                            //get the id of the question
+                            int id = Integer.parseInt(splittedStrings[0]);
+                            //get the answer of the user
+                            String ans = splittedStrings[1];
+                            //get the actual question
+                            String question = readQuestions.get(id);
+                            int index = question.lastIndexOf("\\$");
+                            String correctAns = question.substring(index+1);
+                            if (ans.equals(correctAns)){
+                                writer.println("correct");
+                            }
+                            else{
+                                writer.println("wrong");
+                            }
+                            writer.flush();
+                            break;
+                        case "$SAQ$":
+                            break;
+                        case "$ANS$":
+                            break;
                 }
             }
 
@@ -131,4 +152,6 @@ public class QB {
 
         return questions;
     }
+
+
 }

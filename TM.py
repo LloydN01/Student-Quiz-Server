@@ -7,47 +7,8 @@ import random
 import ast
 import json
 
-# Read the login database
-with open('loginDB.txt', 'r') as loginFile:
-    loginInfo = loginFile.read()
-
-# Read the user questions database
-questionsDict = {}
-with open('userQuestionsDB.txt', 'r') as questionFile:
-     if questionFile.readable() and questionFile.read().strip() != "":
-        # Reposition file pointer to beginning of file
-        questionFile.seek(0)
-        # Load the data as a dictionary
-        questionsDict = json.load(questionFile)
-
-# Convert login details to python dictionaries
-loginDict = ast.literal_eval(loginInfo)
-
-# Get the host from the command line
-HOST = str(argv[1])
-
-# Set the ports
-JAVA_PORT = 9999
-PYTHON_PORT = 9998
-
-# Create the sockets
-javaQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Connect to the servers
-javaQB.connect((HOST, JAVA_PORT))
-pythonQB.connect((HOST, PYTHON_PORT))
-
-# Check that both servers are connected
-if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
-    print("Connected to both servers")
-
-# Set the sockets to non-blocking
-javaQB.setblocking(False)
-pythonQB.setblocking(False)
-
 # Add the sockets to the list of inputs
-inputs = [javaQB, pythonQB]
+inputs = []
 outputs = []
 
 # Randomly choose the number of questions requested to each server
@@ -313,6 +274,57 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    # Read the login database
+    with open('loginDB.txt', 'r') as loginFile:
+        loginInfo = loginFile.read()
+
+    # Read the user questions database
+    questionsDict = {}
+    with open('userQuestionsDB.txt', 'r') as questionFile:
+        if questionFile.readable() and questionFile.read().strip() != "":
+            # Reposition file pointer to beginning of file
+            questionFile.seek(0)
+            # Load the data as a dictionary
+            questionsDict = json.load(questionFile)
+
+    # Convert login details to python dictionaries
+    loginDict = ast.literal_eval(loginInfo)
+
+    HOST1 = "" # IP for device running Java QB
+    HOST2 = "" # IP for device running Python QB
+
+    # Get the host from the command line
+    if len(argv) == 3:
+        HOST1 = str(argv[1])
+        HOST2 = str(argv[2])
+        print("Connected to two different QBs on different machines")
+    elif len(argv) == 2:
+        HOST1 = HOST2 = str(argv[1])
+        print("Connected to two dfferent QBs running on same machine")
+    else:
+        print("Need at least one IP for QB")
+        quit()
+
+    # Set the ports
+    JAVA_PORT = 9999
+    PYTHON_PORT = 9998
+
+    # Create the sockets
+    javaQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Connect to the servers
+    javaQB.connect((HOST1, JAVA_PORT))
+    pythonQB.connect((HOST2, PYTHON_PORT))
+
+    # Check that both servers are connected
+    if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
+        print("Connected to both servers")
+
+    # Set the sockets to non-blocking
+    javaQB.setblocking(False)
+    pythonQB.setblocking(False)
+    inputs = [javaQB, pythonQB]
     port = 5000
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
