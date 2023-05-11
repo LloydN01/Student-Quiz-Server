@@ -158,14 +158,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         params = post_data.split('&')
         for param in params:
             key, value = param.split('=')
-            # print(key + "and" + value)
             if key == 'username':
                 username = value
             elif key == 'password':
                 password = value
 
         print("Name:", username) 
-        print(str(data))
         if self.path == '/questions':
             if 'get-questions' in data:
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
@@ -207,7 +205,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
-                    print(questionPacket)
                     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
                     if questionType == "MC":
                         # If question is multiple choice
@@ -280,6 +277,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 receivedMark = marked[0].recv(2048)
                 if receivedMark:
                     print(receivedMark.decode())
+                    # TODO MAKE SHIT
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    

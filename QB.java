@@ -90,8 +90,6 @@ public class QB {
                             question = readQuestions.get(id);
                             index = question.lastIndexOf("$");
                             correctAns = question.substring(index+1);
-                            System.out.println(ans);
-                            System.out.println(correctAns);
                             if (ans.equals(correctAns)){
                                 writer.println("correct");
                             }
@@ -242,12 +240,14 @@ public class QB {
         for (int i = 0; i < numQuestions; i++){
             int randomIndex = rand.nextInt(questionsList.size());
             String question = questionsList.get(randomIndex);
+            //gets the number of occurance of $
+            int count = question.length() - question.replace("$", "").length();
 
-            int index = question.lastIndexOf("$");
-            if (index != 2){
+            // if the number of $ isnt 3, then its a mcq, and the ans shold be remvoed 
+            if (count != 3){
+                int index = question.lastIndexOf("$");
                 question = question.substring(0,index); // Removing actual answer before sending it to QB
             }
-
             randomQuestions[i] = question;
             questionsList.remove(randomIndex);
         }
