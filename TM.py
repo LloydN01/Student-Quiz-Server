@@ -94,7 +94,6 @@ def login_page():
 
 # Starting page -> get questions
 def index_page(username):
-    # Request the questions from the servers so that they are ready for the next POST request
     content = "<html><head><title>localhost</title></head>"
     content += "<body>"
     content += "<p>Click to get 5 random questions.</p>"
@@ -212,29 +211,26 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             elif key == 'message':
                 answer = value
 
-        print("Name:", username)
-
-        # Perform the login validation (e.g., check against a database)     
+        print("Name:", username) 
 
         if self.path == '/questions':
             if 'get-questions' in data:
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
                 # First time logging in, request the questions from the servers
-
                 getQuestionsFromServer(randomiseQuestionNumbers()) # Request questions from the servers
                 
                 readable = []
-                # Wait for the questions to be received
+                # Wait for the questions to be received from both JavaQB and PythonQB
                 while(True):
                     readable, _ , _ = select.select(inputs, outputs, inputs)
                     if len(readable) == len(inputs):
+                        # Only breaks out of the while loop when questions from both the Java and Python QB have been read
                         break
                 
                 listOfQuestions = []
                 for receivedData in readable:
                     receivedQuestion = receivedData.recv(2048)
                     if receivedQuestion:
-                        print(receivedQuestion.decode())
                         listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
                 
                 # Remove ""s from the list created due to split function
@@ -301,6 +297,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
         elif username in loginDict and loginDict[username] == password:
+            # Perform the login validation (e.g., check against a database)    
             if 'get-index-page' in data:
                 if username not in questionsDict:
                     # If user does not exist in the Questions dictionary, redirect them to the index page
