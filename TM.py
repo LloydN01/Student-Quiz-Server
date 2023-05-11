@@ -252,7 +252,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 # If questionKey contains Java -> JavaQB if Python -> PythonQB
                 # Answer will comeback as either "correct" or "wrong"
 
-                # userAnswer = str(data["answer"])
                 questionKey = str(data["questionKey"][0])
                 userAnswer = str(data["answer"][0])
                 isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
@@ -274,10 +273,16 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 marked = []
                 marked, _ , _ = select.select(inputs, outputs, inputs)
                 
-                receivedMark = marked[0].recv(2048)
+                receivedMark = marked[0].recv(1024)
                 if receivedMark:
                     print(receivedMark.decode())
                     # TODO MAKE SHIT
+                
+
+                userQuestions = questionsDict[username]["questions"]
+                currQuestionNum = questionsDict[username]["questionNum"]
+
+                self._set_response(userQuestions[currQuestionNum]) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    

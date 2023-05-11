@@ -221,10 +221,10 @@ public class QB {
             questionsList.add(Integer.toString(count ++) + "$" + serverType + "$" + line);
             line = buffer.readLine();
 
-            // Each question will have the format [Question#]$[Language]$[MC]$[Question]$[Options]
-            // Example: 1$Java$MC$What is the capital of Canada?$Toronto,Ottawa,Vancouver,Montreal
-            // Or, for Short Answer questions (SA), the format will be [Question#]$[Language]$[SA]$[Question]
-            // Example: 2$Python$SA$What is the capital of Canada?
+            // Each question will have the format [Question#]$[Language]$[MC]$[Question]$[Options]$[Answer]
+            // Example: 1$Java$MC$What is the capital of Canada?$Toronto,Ottawa,Vancouver,Montreal$Ottawa
+            // Or, for Short Answer questions (SA), the format will be [Question#]$[Language]$[SA]$[Question]$[Answer]
+            // Example: 2$Python$SA$What is the capital of Canada?$Ottawa
         }
 
         buffer.close();
@@ -243,7 +243,7 @@ public class QB {
             //gets the number of occurance of $
             int count = question.length() - question.replace("$", "").length();
 
-            // if the number of $ isnt 3, then its a mcq, and the ans shold be remvoed 
+            // if the number of $ isnt 3, then its a mcq, and the ans should be remvoed 
             if (count != 3){
                 int index = question.lastIndexOf("$");
                 question = question.substring(0,index); // Removing actual answer before sending it to QB
