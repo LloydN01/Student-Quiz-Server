@@ -3,6 +3,10 @@ import java.io.*;
 import java.util.*;
 import java.util.ArrayList;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+import java.lang.reflect.Method;
+
 public class QB {
     public static int port;
     public static String serverType;
@@ -48,9 +52,18 @@ public class QB {
                 String flag = receivedString.substring(0, 5); //get the flag
                 receivedString = receivedString.substring(5); //remove the flag from the string
 
+                //Variables
+                String[] splittedStrings;
+                int id;
+                String ans;
+                String question;
+                int index;
+                String correctAns;
+
                 switch (flag){
                         //Requesting Questions
                         //Format is n - where n is the number of questions requested
+
                         case "$REQ$":
                             int numQuestions = Integer.parseInt(receivedString);
                             System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
@@ -67,15 +80,15 @@ public class QB {
                         //Marking a multiple choice question
                         //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
                         case "$MCQ$":
-                            String[] splittedStrings = receivedString.split("\\$");
+                            splittedStrings = receivedString.split("\\$");
                             //get the id of the question
-                            int id = Integer.parseInt(splittedStrings[0]);
+                            id = Integer.parseInt(splittedStrings[0]);
                             //get the answer of the user
-                            String ans = splittedStrings[1];
+                            ans = splittedStrings[1];
                             //get the actual question
-                            String question = readQuestions.get(id);
-                            int index = question.lastIndexOf("\\$");
-                            String correctAns = question.substring(index+1);
+                            question = readQuestions.get(id);
+                            index = question.lastIndexOf("\\$");
+                            correctAns = question.substring(index+1);
                             if (ans.equals(correctAns)){
                                 writer.println("correct");
                             }
@@ -85,6 +98,30 @@ public class QB {
                             writer.flush();
                             break;
                         case "$SAQ$":
+                            splittedStrings = receivedString.split("\\$");
+                            //get the id of the question
+                            id = Integer.parseInt(splittedStrings[0]);
+                            //get the answer of the user
+                            ans = splittedStrings[1];
+                            String userAns;
+                            if (serverType == "Python"){ 
+                                userAns = pythonTester(ans);
+                            }
+                            else{
+                                userAns = javaTester(ans);
+                            }
+
+                            //get the actual question
+                            question = readQuestions.get(id);
+                            index = question.lastIndexOf("\\$");
+                            correctAns = question.substring(index+1);
+                            if (userAns.equals(correctAns)){
+                                writer.println("correct");
+                            }
+                            else{
+                                writer.println("wrong");
+                            }
+                            writer.flush();
                             break;
                         case "$ANS$":
                             break;
@@ -103,6 +140,72 @@ public class QB {
             break;
         }
         serverSocket.close();
+    }
+    
+    //python test method
+    public static String pythonTester(String codeString) {
+        // Python code to be executed
+        String pythonCode = codeString;
+        try {
+            // Execute Python code using the Python interpreter
+            ProcessBuilder processBuilder = new ProcessBuilder("python", "-c", pythonCode);
+            Process process = processBuilder.start();
+
+            // Read the output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line = reader.readLine();
+            return line;
+    
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "$F$";
+        }
+    }
+
+    public static String javaTester(String codeString){
+        // Java code to be executed
+        try{
+        String code = codeString;
+
+        // Create an in-memory Java file
+        String className = "MyClass";
+        String fileName = className + ".java";
+        String filePath = System.getProperty("user.dir") + "/" + fileName;
+        createFile(filePath, code); // Assume FileManager is a utility class to create files
+
+        // Compile the Java file
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        compiler.run(null, null, null, filePath);
+
+        // Load the compiled class
+        Class<?> compiledClass = Class.forName(className);
+
+        // Invoke the method using reflection
+        Method method = compiledClass.getMethod("myMethod");
+        Object returnValue = method.invoke(null);
+        return String.valueOf(returnValue);
+        } catch (Exception e){
+            return "$F";
+        }
+
+    }
+
+
+    public static void createFile(String filePath, String content) {
+        try {
+            File file = new File(filePath);
+
+            // Create the file if it doesn't exist
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            // Write the content to the file
+            java.nio.file.Files.write(file.toPath(), content.getBytes());
+            System.out.println("File created successfully at: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Function that reads a text file
