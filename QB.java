@@ -80,6 +80,7 @@ public class QB {
                         //Marking a multiple choice question
                         //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
                         case "$MCQ$":
+                            
                             splittedStrings = receivedString.split("\\$");
                             //get the id of the question
                             id = Integer.parseInt(splittedStrings[0]);
@@ -87,8 +88,10 @@ public class QB {
                             ans = splittedStrings[1];
                             //get the actual question
                             question = readQuestions.get(id);
-                            index = question.lastIndexOf("\\$");
+                            index = question.lastIndexOf("$");
                             correctAns = question.substring(index+1);
+                            System.out.println(ans);
+                            System.out.println(correctAns);
                             if (ans.equals(correctAns)){
                                 writer.println("correct");
                             }
@@ -113,7 +116,7 @@ public class QB {
 
                             //get the actual question
                             question = readQuestions.get(id);
-                            index = question.lastIndexOf("\\$");
+                            index = question.lastIndexOf("$");
                             correctAns = question.substring(index+1);
                             if (userAns.equals(correctAns)){
                                 writer.println("correct");
@@ -238,7 +241,14 @@ public class QB {
 
         for (int i = 0; i < numQuestions; i++){
             int randomIndex = rand.nextInt(questionsList.size());
-            randomQuestions[i] = questionsList.get(randomIndex);
+            String question = questionsList.get(randomIndex);
+
+            int index = question.lastIndexOf("$");
+            if (index != 2){
+                question = question.substring(0,index); // Removing actual answer before sending it to QB
+            }
+
+            randomQuestions[i] = question;
             questionsList.remove(randomIndex);
         }
 

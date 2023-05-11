@@ -7,11 +7,6 @@ import random
 import ast
 import json
 
-# TODO: Figure out why the below empty lists are there
-# Add the sockets to the list of inputs
-inputs = []
-outputs = []
-
 # Randomly choose the number of questions requested to each server
 def randomiseQuestionNumbers():
     # choose a random number between 0 and 5
@@ -212,6 +207,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
+                    print(questionPacket)
                     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
                     if questionType == "MC":
                         # If question is multiple choice
@@ -273,20 +269,17 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 answerToQB = id + "$" + userAnswer
 
                 if isJavaQB:
-                    javaQB.sendall(answerToQB, "utf-8")
+                    javaQB.sendall(bytes(answerToQB + "\n", "utf-8"))
                 else:
-                    pythonQB.sendall(answerToQB, "utf-8")
+                    pythonQB.sendall(bytes(answerToQB + "\n", "utf-8"))
 
                 # Wait for the answer to be received from the QB
-                readable = []
-                while(True):
-                    readable, _ , _ = select.select(inputs, outputs, inputs)
-                    if len(readable) == 1:
-                        # Only breaks out of the while loop when the answer from the QB has been read
-                        break
+                marked = []
+                marked, _ , _ = select.select(inputs, outputs, inputs)
                 
-                print("Received answer from QB" + str(readable))
-
+                receivedMark = marked[0].recv(2048)
+                if receivedMark:
+                    print(receivedMark.decode())
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
@@ -359,7 +352,11 @@ if __name__ == '__main__':
     # Set the sockets to non-blocking
     javaQB.setblocking(False)
     pythonQB.setblocking(False)
+
+    # Add the sockets to the inputs list
     inputs = [javaQB, pythonQB]
+    outputs = []
+
     port = 5000
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
