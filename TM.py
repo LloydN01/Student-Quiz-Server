@@ -74,12 +74,14 @@ def multipleChoice(question, options, username, questionKey):
     questionNumber = len(questionsDict[username]["questions"]) + 1
     # Question
     content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
-    content += "<form method='post'>"
+    content += "<form action='/questions' method='post'>"
     # Options
     for option in options:
         content += "<input type='radio' id='{}' name='answer' value='{}'>".format(option, option)
         content += "<label for='{}'>{}</label><br>".format(option, option)
     content += "<input type='submit' name='submit-answer' value='Submit'>"
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
 
     # Back and next buttons
     content += "<input type='submit' name='previous-question' value='Previous Question'>"
@@ -87,10 +89,6 @@ def multipleChoice(question, options, username, questionKey):
 
     # Hidden username field to keep the username
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-
-    # Hidden input for question ID 
-    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
-
     content += "</form>"
 
     return "$MC$" + content
@@ -100,11 +98,13 @@ def shortAnswer(question, username, questionKey):
     questionNumber = len(questionsDict[username]["questions"]) + 1
     # Question
     content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
-    content += "<form method='post'>"
+    content += "<form action='/questions' method='post'>"
     # Answer
     content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
     content += "<br>"
     content += "<input type='submit' name='submit-answer' value='Submit'>"
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
 
     # Back and next buttons
     content += "<input type='submit' name='previous-question' value='Previous Question'>"
@@ -112,9 +112,6 @@ def shortAnswer(question, username, questionKey):
 
     # Hidden username field to keep the username
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-
-    # Hidden input for question ID 
-    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
     content += "</form>"
 
     return "$SA$" + content
@@ -172,7 +169,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 password = value
 
         print("Name:", username) 
-
+        print(str(data))
         if self.path == '/questions':
             if 'get-questions' in data:
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
@@ -257,8 +254,24 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 self._set_response(userQuestions[newQuestionNumber])
             elif 'submit-answer' in data:
-                
-                print("Answer chosen by user: " + str(data['answer']))
+                # theQuestionTypeandIndex = str(data["questionKey"]).rfind('$')
+                # #java5
+                # serverToSend = "JAVA" if "Java" in theQuestionTypeandIndex else "Python"
+                # id = theQuestionTypeandIndex.replace("Java","")
+                # id = theQuestionTypeandIndex.replace("Python","")
+
+                # userAnswer = str(data["answer"])
+                questionKey = str(data["questionKey"][0])
+                userAnswer = str(data["answer"][0])
+
+                id = ""
+                if "Java" in questionKey:
+                    id = questionKey.replace('Java',"",1)
+                elif "Python" in questionKey:
+                    id = questionKey.replace('Python',"",1)
+
+                print(id + "$" + userAnswer)
+
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
             if 'get-index-page' in data:
