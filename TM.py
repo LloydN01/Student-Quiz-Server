@@ -304,7 +304,7 @@ if __name__ == '__main__':
         HOST2 = str(argv[2])
         print("Connected to two different QBs on different machines")
     elif len(argv) == 2:
-        HOST1, HOST2 = str(argv[1])
+        HOST1 = HOST2 = str(argv[1])
         print("Connected to two dfferent QBs running on same machine")
     else:
         print("Need at least one IP for QB")
