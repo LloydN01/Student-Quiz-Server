@@ -273,9 +273,19 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 answerToQB = id + "$" + userAnswer
 
                 if isJavaQB:
-                    javaQB.sendall(answerToQB, "utf-8"))
+                    javaQB.sendall(answerToQB, "utf-8")
                 else:
-                    pythonQB.sendall(answerToQB, "utf-8"))
+                    pythonQB.sendall(answerToQB, "utf-8")
+
+                # Wait for the answer to be received from the QB
+                readable = []
+                while(True):
+                    readable, _ , _ = select.select(inputs, outputs, inputs)
+                    if len(readable) == 1:
+                        # Only breaks out of the while loop when the answer from the QB has been read
+                        break
+                
+                print("Received answer from QB" + str(readable))
 
 
         elif username in loginDict and loginDict[username] == password:
