@@ -1,1 +1,1 @@
-public class MyClass {public static void myMethod() { System.out.print("Hello, World!"); } }
+jdfadsf
