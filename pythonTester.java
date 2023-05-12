@@ -2,7 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class DynamicCodeExecution2 {
+public class pythonTester {
     public static void main(String[] args) {
         // Python code to be executed
         String pythonCode = """

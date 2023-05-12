@@ -4,11 +4,14 @@ import java.lang.reflect.Method;
 import java.io.File;
 import java.io.IOException;
 
-public class DynamicCodeExecution {
+public class javaTester {
     public static void main(String[] args) throws Exception {
         // Java code to be executed
-        String code = "public class MyClass { public static void myMethod() { System.out.println(\"Hello, World!\"); } }";
+        String code = "public class MyClass {public static void myMethod() { System.out.print(\"Hello, World!\"); } }";
+        System.out.print(tester(code));
+    }
 
+    public static String tester(String code) throws Exception{
         // Create an in-memory Java file
         String className = "MyClass";
         String fileName = className + ".java";
@@ -24,7 +27,8 @@ public class DynamicCodeExecution {
 
         // Invoke the method using reflection
         Method method = compiledClass.getMethod("myMethod");
-        method.invoke(null);
+        Object returnValue = method.invoke(null);
+        return String.valueOf(returnValue);
     }
 
     public static void createFile(String filePath, String content) {

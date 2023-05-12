@@ -106,6 +106,7 @@ public class QB {
                             //get the answer of the user
                             ans = splittedStrings[1];
                             String userAns;
+                            
                             if (serverType == "Python"){ 
                                 userAns = pythonTester(ans);
                             }
