@@ -7,6 +7,19 @@ import random
 import ast
 import json
 
+
+# Function that creates Javascript that enables the use of tab for indentations
+def enableTabPresses():
+    # Code was copied from https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
+    content = "<script>"
+    content += "document.getElementById('textbox').addEventListener('keydown', function(e) {"
+    content += "if (e.key == 'Tab') { e.preventDefault(); var start = this.selectionStart; var end = this.selectionEnd;"
+    content += "this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);"
+    content += "this.selectionStart = this.selectionEnd = start + 1;}});"
+    content += "</script>"
+
+    return content
+
 # Randomly choose the number of questions requested to each server
 def randomiseQuestionNumbers():
     # choose a random number between 0 and 5
@@ -141,7 +154,7 @@ def shortAnswer(questionNumber, question, username, questionKey):
     content = "<p>Q{} for {})<br>{}</p>".format(questionNumber + 1, username, question)
     content += "<form action='/questions' method='post'>"
     # Answer
-    content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
+    content += "<textarea id='textbox' name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
     content += "<br>"
     
     if isQuestionComplete(username, questionNumber):
@@ -165,7 +178,7 @@ def shortAnswer(questionNumber, question, username, questionKey):
     # Display the current question status (attempt number and mark)
     content += generateCurrentStatus(questionsDict[username]["marks"][questionNumber], questionsDict[username]["attempts"][questionNumber])
 
-    return content
+    return content + enableTabPresses()
 
 # Creates the HTML that displays the current question using the packet received from the QBs
 def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
@@ -339,46 +352,55 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 HTMLContent = (generateQuestionsHTML(userQuestions[newQuestionNumber], username))
             elif 'submit-answer' in data:
-                # Send user submitted answer to the correct QB
-                # If questionKey contains Java -> JavaQB if Python -> PythonQB
-                # Answer will comeback as either "correct" or "wrong"
-
-                questionKey = str(data["questionKey"][0])
-                userAnswer = str(data["answer"][0])
-                isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
-                id = ""
-                if "Java" in questionKey:
-                    isJavaQB = True
-                    id = questionKey.replace('Java',"",1)
-                elif "Python" in questionKey:
-                    id = questionKey.replace('Python',"",1)
-
-                answerToQB = id + "$" + userAnswer + "\n" # Format the answer to be sent to the QB
-                
-                receivedMark = Marking_requestAndReceiveFromQB(isJavaQB, answerToQB) # Send the answer to the correct QB and receive the mark
-
-                questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1 # Increment the attempt number for the question
-
-                if receivedMark == "correct":
-                    currAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
-                    # If the answer is correct, set the mark
-                    questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 4 - currAttempt
-                elif receivedMark == "wrong" and questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] == 3:
-                    # If the answer is wrong on the 3rd attempt -> remove submit button -> request for correct answer to QB -> receive correct answer -> display to user
-                    
-                    idForAnswer = id.replace("$MCQ$", "").replace("$SAQ$", "") # Remove the question type from the id (e.g., $MCQ$1 -> 1)
-                    requestForAns = "$ANS$" + idForAnswer + "\n" # Format the request for the correct answer to be sent to the QB
-
-                    # Receive the correct answer from QB
-                    correctAnswer =  Marking_requestAndReceiveFromQB(isJavaQB, requestForAns)
-
-                    # Dislay the incorrect answer and correct answer side by side
-                    additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
-                
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
-                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
+                if "answer" in data:
+                    # Send user submitted answer to the correct QB
+                    # If questionKey contains Java -> JavaQB if Python -> PythonQB
+                    # Answer will comeback as either "correct" or "wrong"
+
+                    questionKey = str(data["questionKey"][0])
+                    userAnswer = str(data["answer"][0])
+
+
+                    print(userAnswer)
+
+
+                    isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
+                    id = ""
+                    if "Java" in questionKey:
+                        isJavaQB = True
+                        id = questionKey.replace('Java',"",1)
+                    elif "Python" in questionKey:
+                        id = questionKey.replace('Python',"",1)
+
+                    answerToQB = id + "$" + userAnswer + "\n" # Format the answer to be sent to the QB
+                    
+                    receivedMark = Marking_requestAndReceiveFromQB(isJavaQB, answerToQB) # Send the answer to the correct QB and receive the mark
+
+                    questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1 # Increment the attempt number for the question
+
+                    if receivedMark == "correct":
+                        currAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
+                        # If the answer is correct, set the mark
+                        questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 4 - currAttempt
+                    elif receivedMark == "wrong" and questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] == 3:
+                        # If the answer is wrong on the 3rd attempt -> remove submit button -> request for correct answer to QB -> receive correct answer -> display to user
+                        
+                        idForAnswer = id.replace("$MCQ$", "").replace("$SAQ$", "") # Remove the question type from the id (e.g., $MCQ$1 -> 1)
+                        requestForAns = "$ANS$" + idForAnswer + "\n" # Format the request for the correct answer to be sent to the QB
+
+                        # Receive the correct answer from QB
+                        correctAnswer =  Marking_requestAndReceiveFromQB(isJavaQB, requestForAns)
+
+                        # Dislay the incorrect answer and correct answer side by side
+                        additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
+
+                    HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
+                else:
+                    # If "answer" is not in data, then the user has not submitted an answer and just pressed submit
+                    HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
