@@ -87,7 +87,7 @@ def multipleChoice(question, options, username, questionKey):
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
     content += "</form>"
 
-    return "$MC$" + content
+    return content
 
 # Creates the HTML for the short answer question
 def shortAnswer(question, username, questionKey):
@@ -110,7 +110,7 @@ def shortAnswer(question, username, questionKey):
     content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
     content += "</form>"
 
-    return "$SA$" + content
+    return content
 
 # Creates the HTML that displays the current user mark (if question is completed) or the attempt number (if question is incomplete)
 def generateCurrentStatus(mark, attempt):
@@ -149,13 +149,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         
-        # Check if multiple choice or short answer or index page
-        if content.startswith("$MC$"):
-            self.wfile.write(bytes(content[4:], "utf-8"))
-        elif content.startswith("$SA$"):
-            self.wfile.write(bytes(content[4:], "utf-8"))
-        else:
-            self.wfile.write(bytes(content, "utf-8"))
+        self.wfile.write(bytes(content, "utf-8"))
 
     def do_GET(self):
         if self.path == "/":
