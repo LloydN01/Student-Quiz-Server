@@ -59,8 +59,14 @@ def isQuestionComplete(username, questionNumber):
 # Returns the total up-to-date status of the test for the user
 def getTestStatus(username):
     totalNumQuestions = len(questionsDict[username]["questions"])
-    totalNumQuestionsCompleted = (len([mark for mark in questionsDict[username]["marks"] if mark > 0]) + 
-                                  len([attempt for attempt in questionsDict[username]["attempts"] if attempt == 3]))
+    userMarks = questionsDict[username]["marks"]
+    userAttempts = questionsDict[username]["attempts"]
+
+    totalNumQuestionsCompleted = 0 # Total number of questions completed by the user (ie. passed or failed)
+    for index in range(len(userMarks)):
+        if userMarks[index] > 0 or userAttempts[index] == 3:
+            totalNumQuestionsCompleted += 1
+
     currentTotalMark = sum(questionsDict[username]["marks"])
     availableMarks = totalNumQuestions * 3
 
@@ -108,7 +114,7 @@ def generateCurrentStatus(mark, attempt):
     if attempt == 3 and mark == 0:
         content += "FAILED <br> You have failed this question 3 times. Please move on to the next question. </p>"
     elif mark > 0:
-        content += "PASSED <br> You took {} attempts and received {} marks for this question. </p>".format(attempt, mark)
+        content += "PASSED <br> You took {} attempt(s) and received {} mark(s) for this question. </p>".format(attempt, mark)
     else:
         content += "INCOMPLETE</p>"
 
