@@ -27,12 +27,21 @@ def getQuestionsFromServer(numQuestions):
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
 
+# Convert the question data into question body and answer (ie. "What is 1+1?$/a. 2/ b. 3/ c. 4/ d. 5" -> ("What is 1+1?", ["a. 2", "b. 3", "c. 4", "d. 5"]))
 def convertToMultipleChoice(question):
     # Split the question into the question and the answer
     question, answer = question.split("$")
     options = answer.split("/") # Split the answer into the options
     
     return (question, options)
+
+# Checks if the current question has been completed or not (ie. if the user has failed the question 3 times or has passed the question)
+def isQuestionComplete(username, questionNumber):
+    # Check if the question is complete
+    if questionsDict[username]["attempts"][questionNumber] == 3 or questionsDict[username]["marks"][questionNumber] > 0:
+        return True
+    else:
+        return False
 
 # Creates the HTML for the login page
 def login_page():
@@ -68,8 +77,8 @@ def index_page(username):
 # Creates the HTML that displays the current user mark (if question is completed) or the attempt number (if question is incomplete)
 def generateCurrentStatus(mark, attempt):
     print(mark, attempt)
-    content = "<p>Current Status: "
-    if attempt > 3:
+    content = "<p>Current Question Status: "
+    if attempt == 3:
         content += "FAILED <br> You have failed this question 3 times. Please move on to the next question. </p>"
     elif mark > 0:
         content += "PASSED</p>"
@@ -82,7 +91,7 @@ def generateCurrentStatus(mark, attempt):
     else:
         content += str(attempt) + "</p>"
     
-    content += "<p> Current Mark: " + str(mark) + "</p>"
+    content += "<p> Current Question Mark: " + str(mark) + "</p>"
 
     return content
 
@@ -95,7 +104,14 @@ def multipleChoice(questionNumber, question, options, username, questionKey):
     for option in options:
         content += "<input type='radio' id='{}' name='answer' value='{}'>".format(option, option)
         content += "<label for='{}'>{}</label><br>".format(option, option)
-    content += "<input type='submit' name='submit-answer' value='Submit'>"
+    
+    if isQuestionComplete(username, questionNumber):
+        # If question is complete, display a message
+        content += "<p>Question is closed. Please move on to the next question.</p>"
+    else:
+        # If question is incomplete, display the submit button
+        content += "<input type='submit' name='submit-answer' value='Submit'>"
+
     # Hidden input for question ID 
     content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
 
@@ -120,7 +136,14 @@ def shortAnswer(questionNumber, question, username, questionKey):
     # Answer
     content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
     content += "<br>"
-    content += "<input type='submit' name='submit-answer' value='Submit'>"
+    
+    if isQuestionComplete(username, questionNumber):
+        # If question is complete, display a message
+        content += "<p>Question is closed. Please move on to the next question.</p>"
+    else:
+        # If question is incomplete, display the submit button
+        content += "<input type='submit' name='submit-answer' value='Submit'>"
+    
     # Hidden input for question ID 
     content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
 
@@ -304,25 +327,16 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 else:
                     pythonQB.sendall(bytes(answerToQB + "\n", "utf-8"))
 
-                # Wait for the answer to be received from the QB
                 marked = []
-                marked, _ , _ = select.select(inputs, outputs, inputs)
-                receivedMark = marked[0].recv(1024).decode().strip() # Either "correct" or "wrong"
-
-                currentMark = questionsDict[username]["marks"][questionsDict[username]["questionNum"]]
-                currentAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
+                marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the answer to be received from the QB
+                receivedMark = marked[0].recv(1024).decode().strip() # Receive either "correct" or "wrong"
                 
+                questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1 # Increment the attempt number for the question
                 if receivedMark == "correct":
-                    # If the answer is correct, increment the marks
-                    questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 3 - currentAttempt
-                    questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1
-                elif receivedMark == "wrong":
-                    # If the answer is wrong, increment the attempts
-                    questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1
+                    currAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
+                    # If the answer is correct, set the mark
+                    questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 4 - currAttempt
                 
-                newMark = questionsDict[username]["marks"][questionsDict[username]["questionNum"]]
-                newAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
-
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
