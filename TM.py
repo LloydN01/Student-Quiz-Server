@@ -65,51 +65,6 @@ def index_page(username):
 
     return content
 
-# Creates the HTML for the multiple choice question
-def multipleChoice(questionNumber, question, options, username, questionKey):
-    # Question
-    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber, username, question)
-    content += "<form action='/questions' method='post'>"
-    # Options
-    for option in options:
-        content += "<input type='radio' id='{}' name='answer' value='{}'>".format(option, option)
-        content += "<label for='{}'>{}</label><br>".format(option, option)
-    content += "<input type='submit' name='submit-answer' value='Submit'>"
-    # Hidden input for question ID 
-    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
-
-    # Back and next buttons
-    content += "<input type='submit' name='previous-question' value='Previous Question'>"
-    content += "<input type='submit' name='next-question' value='Next Question'>"
-
-    # Hidden username field to keep the username
-    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-    content += "</form>"
-
-    return content
-
-# Creates the HTML for the short answer question
-def shortAnswer(questionNumber, question, username, questionKey):
-    # Question
-    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber, username, question)
-    content += "<form action='/questions' method='post'>"
-    # Answer
-    content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
-    content += "<br>"
-    content += "<input type='submit' name='submit-answer' value='Submit'>"
-    # Hidden input for question ID 
-    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
-
-    # Back and next buttons
-    content += "<input type='submit' name='previous-question' value='Previous Question'>"
-    content += "<input type='submit' name='next-question' value='Next Question'>"
-
-    # Hidden username field to keep the username
-    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
-    content += "</form>"
-
-    return content
-
 # Creates the HTML that displays the current user mark (if question is completed) or the attempt number (if question is incomplete)
 def generateCurrentStatus(mark, attempt):
     print(mark, attempt)
@@ -131,9 +86,60 @@ def generateCurrentStatus(mark, attempt):
 
     return content
 
+# Creates the HTML for the multiple choice question
+def multipleChoice(questionNumber, question, options, username, questionKey):
+    # Question
+    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber + 1, username, question)
+    content += "<form action='/questions' method='post'>"
+    # Options
+    for option in options:
+        content += "<input type='radio' id='{}' name='answer' value='{}'>".format(option, option)
+        content += "<label for='{}'>{}</label><br>".format(option, option)
+    content += "<input type='submit' name='submit-answer' value='Submit'>"
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$MCQ$" + questionKey)
+
+    # Back and next buttons
+    content += "<input type='submit' name='previous-question' value='Previous Question'>"
+    content += "<input type='submit' name='next-question' value='Next Question'>"
+
+    # Hidden username field to keep the username
+    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+    content += "</form>"
+
+    # Display the current question status (attempt number and mark)
+    content += generateCurrentStatus(questionsDict[username]["marks"][questionNumber], questionsDict[username]["attempts"][questionNumber])
+
+    return content
+
+# Creates the HTML for the short answer question
+def shortAnswer(questionNumber, question, username, questionKey):
+    # Question
+    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber + 1, username, question)
+    content += "<form action='/questions' method='post'>"
+    # Answer
+    content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
+    content += "<br>"
+    content += "<input type='submit' name='submit-answer' value='Submit'>"
+    # Hidden input for question ID 
+    content += "<input type='hidden' id='questionKey' name='questionKey' value='{}'>".format("$SAQ$" + questionKey)
+
+    # Back and next buttons
+    content += "<input type='submit' name='previous-question' value='Previous Question'>"
+    content += "<input type='submit' name='next-question' value='Next Question'>"
+
+    # Hidden username field to keep the username
+    content += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+    content += "</form>"
+
+    # Display the current question status (attempt number and mark)
+    content += generateCurrentStatus(questionsDict[username]["marks"][questionNumber], questionsDict[username]["attempts"][questionNumber])
+
+    return content
+
 # Creates the HTML that displays the current question using the packet received from the QBs
 def generateQuestionsHTML(questionPacket, username):
-    index = questionsDict[username]["questions"].index(questionPacket) + 1 # Get the index of the current question for the user eg -> Qx) where x is index
+    index = questionsDict[username]["questions"].index(questionPacket) # Get the index of the current question for the user eg -> Qx) where x is index
     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
     content = ""
     if questionType == "MC":
@@ -320,9 +326,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
-                questionStatus =  generateCurrentStatus(newMark, newAttempt) # Add the current status to the question body
-
-                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username) + questionStatus) # After submitting their answer, the page should stay on the same question
+                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
