@@ -66,10 +66,9 @@ def index_page(username):
     return content
 
 # Creates the HTML for the multiple choice question
-def multipleChoice(question, options, username, questionKey):
-    questionNumber = len(questionsDict[username]["questions"]) + 1
+def multipleChoice(questionNumber, question, options, username, questionKey):
     # Question
-    content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
+    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber, username, question)
     content += "<form action='/questions' method='post'>"
     # Options
     for option in options:
@@ -90,10 +89,9 @@ def multipleChoice(question, options, username, questionKey):
     return content
 
 # Creates the HTML for the short answer question
-def shortAnswer(question, username, questionKey):
-    questionNumber = len(questionsDict[username]["questions"]) + 1
+def shortAnswer(questionNumber, question, username, questionKey):
     # Question
-    content = "<p>Q{})<br>{}</p>".format(questionNumber, question)
+    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber, username, question)
     content += "<form action='/questions' method='post'>"
     # Answer
     content += "<textarea name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
@@ -120,6 +118,8 @@ def generateCurrentStatus(mark, attempt):
         content += "FAILED <br> You have failed this question 3 times. Please move on to the next question. </p>"
     elif mark > 0:
         content += "PASSED</p>"
+    else:
+        content += "INCOMPLETE</p>"
 
     content += "<p>Attempt Number: "
     if attempt > 3:
@@ -128,6 +128,22 @@ def generateCurrentStatus(mark, attempt):
         content += str(attempt) + "</p>"
     
     content += "<p> Current Mark: " + str(mark) + "</p>"
+
+    return content
+
+# Creates the HTML that displays the current question using the packet received from the QBs
+def generateQuestionsHTML(questionPacket, username):
+    index = questionsDict[username]["questions"].index(questionPacket) + 1 # Get the index of the current question for the user eg -> Qx) where x is index
+    questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
+    content = ""
+    if questionType == "MC":
+        # If question is multiple choice
+        questionBody, options = convertToMultipleChoice(question)
+        content += multipleChoice(index, questionBody, options, username, questionLang + questionNum)
+    elif questionType == "SA":
+        # If question is short answer
+        questionBody = question
+        content += shortAnswer(index, questionBody, username, questionLang + questionNum)
 
     return content
 
@@ -164,8 +180,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8')
         data = parse_qs(post_data)
 
-        username = ""
-        password = ""
+        username = "" # Stoes the username of the current user
+        password = "" # Stores the password of the current user (only relevant when logging in)
+        HTMLContent = "" # Stores the HTML content that will be sent back to the user via _set_response()
 
         # Extract the username and password from the form data
         params = post_data.split('&')
@@ -176,7 +193,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             elif key == 'password':
                 password = value
 
-        print("Name:", username) 
+        print("Name:", username)
+
         if self.path == '/questions':
             if 'get-questions' in data:
                 # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
@@ -218,22 +236,20 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 currUser = questionsDict[username]
 
                 for questionPacket in listOfQuestions:
+                    currUser["questions"].append(questionPacket)
+
                     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
                     if questionType == "MC":
                         # If question is multiple choice
-                        questionBody, options = convertToMultipleChoice(question)
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(multipleChoice(questionBody, options, username, questionLang + questionNum))
                     elif questionType == "SA":
                         # If question is short answer
-                        questionBody = question
                         currUser["questionKeys"].append(questionLang + questionNum)
-                        currUser["questions"].append(shortAnswer(questionBody, username, questionLang + questionNum))
 
                 currUser["marks"] = [0] * len(currUser["questions"]) # Initialise the marks to 0
                 currUser["attempts"] = [0] * len(currUser["questions"]) # Initialise the attempt number to 0
 
-                self._set_response(currUser["questions"][0]) # Send the first question to the user
+                HTMLContent = (generateQuestionsHTML(currUser["questions"][0], username)) # Send the first question to the user
             elif 'next-question' in data:
                 # Check that the question number is not the last question
                 oldQuestionNumber = questionsDict[username]["questionNum"]
@@ -246,7 +262,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
                 newQuestionNumber = questionsDict[username]["questionNum"]
                 
-                self._set_response(userQuestions[newQuestionNumber])
+                HTMLContent = (generateQuestionsHTML(userQuestions[newQuestionNumber], username))
             elif 'previous-question' in data:
                 # Check that the question number is not the first question
                 oldQuestionNumber = questionsDict[username]["questionNum"]
@@ -259,7 +275,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 
                 newQuestionNumber = questionsDict[username]["questionNum"]
                 
-                self._set_response(userQuestions[newQuestionNumber])
+                HTMLContent = (generateQuestionsHTML(userQuestions[newQuestionNumber], username))
             elif 'submit-answer' in data:
                 # Send user submitted answer to the correct QB
                 # If questionKey contains Java -> JavaQB if Python -> PythonQB
@@ -304,9 +320,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
-                questionsDict[username]["questions"][currQuestionNum] = userQuestions[currQuestionNum] + generateCurrentStatus(newMark, newAttempt) # Add the current status to the question body
+                questionStatus =  generateCurrentStatus(newMark, newAttempt) # Add the current status to the question body
 
-                self._set_response(questionsDict[username]["questions"][currQuestionNum]) # After submitting their answer, the page should stay on the same question
+                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username) + questionStatus) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    
@@ -316,17 +332,19 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # These users have not received their questions yet
                     print("New user {} has been added".format(username))
                     content = index_page(username)
-                    self._set_response(content)
+                    HTMLContent = (content)
                 else:
                     # If user has received their questions already, redirect them to the questions page where they last left off
                     currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
                     currQuestionContent = questionsDict[username]["questions"][currQuestionNum] # The question that the user is currently on
                     print("User {} has returned".format(username))
-                    self._set_response(currQuestionContent)
+                    HTMLContent = (generateQuestionsHTML(currQuestionContent, username))
         else:
             content = login_page() + "<p>Invalid username or password</p>"
-            self._set_response(content)
+            HTMLContent = (content)
 
+        # Send the HTML content to the client
+        self._set_response(HTMLContent)
 
 if __name__ == '__main__':
     # Read the login database
