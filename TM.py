@@ -84,7 +84,6 @@ def index_page(username):
 
 # Creates the HTML that displays the current user mark (if question is completed) or the attempt number (if question is incomplete)
 def generateCurrentStatus(mark, attempt):
-    print(mark, attempt)
     content = "<p>Current Question Status: "
     if attempt == 3 and mark == 0:
         content += "FAILED <br> You have failed this question 3 times. Please move on to the next question. </p>"
@@ -169,7 +168,7 @@ def shortAnswer(questionNumber, question, username, questionKey):
     return content
 
 # Creates the HTML that displays the current question using the packet received from the QBs
-def generateQuestionsHTML(questionPacket, username):
+def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
     index = questionsDict[username]["questions"].index(questionPacket) # Get the index of the current question for the user eg -> Qx) where x is index
     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
     content = ""
@@ -183,7 +182,7 @@ def generateQuestionsHTML(questionPacket, username):
         questionBody = question
         content += shortAnswer(index, questionBody, username, questionLang + questionNum)
 
-    return content
+    return content + additionalContent # additional content is used for displaying the correct answer if the user has failed the question 3 times
 
 # Creates the HTML that displays the incorrect answer given by user and correct answer provided by QB
 def compareAnswersHTML(answer, correctAnswer):
@@ -192,6 +191,21 @@ def compareAnswersHTML(answer, correctAnswer):
     content += "<p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Correct Answer: <br>{}</p></div>".format(correctAnswer)
 
     return content
+
+# USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
+def Marking_requestAndReceiveFromQB(isJavaQB, request):
+    if isJavaQB:
+        javaQB.sendall(bytes(request, "utf-8"))
+    else:
+        pythonQB.sendall(bytes(request, "utf-8"))
+
+    # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
+    # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
+    marked = []
+    marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the data to be received from the QB
+    received = marked[0].recv(1024).decode().strip() # Receive data
+
+    return received
 
 
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -230,6 +244,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         username = "" # Stoes the username of the current user
         password = "" # Stores the password of the current user (only relevant when logging in)
         HTMLContent = "" # Stores the HTML content that will be sent back to the user via _set_response()
+        additionalContent = "" # Stores the additional information that will be displayed to the user
 
         # Extract the username and password from the form data
         params = post_data.split('&')
@@ -338,42 +353,32 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 elif "Python" in questionKey:
                     id = questionKey.replace('Python',"",1)
 
-                answerToQB = id + "$" + userAnswer # Format the answer to be sent to the QB
-
-                if isJavaQB:
-                    javaQB.sendall(bytes(answerToQB + "\n", "utf-8"))
-                else:
-                    pythonQB.sendall(bytes(answerToQB + "\n", "utf-8"))
-
-                marked = []
-                marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the answer to be received from the QB
-                receivedMark = marked[0].recv(1024).decode().strip() # Receive either "correct" or "wrong"
+                answerToQB = id + "$" + userAnswer + "\n" # Format the answer to be sent to the QB
                 
-                additionalInfo = "" # Stores the additional information that will be displayed to the user
+                receivedMark = Marking_requestAndReceiveFromQB(isJavaQB, answerToQB) # Send the answer to the correct QB and receive the mark
 
                 questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1 # Increment the attempt number for the question
+
                 if receivedMark == "correct":
                     currAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
                     # If the answer is correct, set the mark
                     questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 4 - currAttempt
                 elif receivedMark == "wrong" and questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] == 3:
                     # If the answer is wrong on the 3rd attempt -> remove submit button -> request for correct answer to QB -> receive correct answer -> display to user
-
-                    # TODO: send request to QB for correct answer
-                    # TODO: receive correct answer from QB
-
-
+                    
+                    idForAnswer = id.replace("$MCQ$", "").replace("$SAQ$", "") # Remove the question type from the id (e.g., $MCQ$1 -> 1)
+                    requestForAns = "$ANS$" + idForAnswer + "\n" # Format the request for the correct answer to be sent to the QB
 
                     # Receive the correct answer from QB
-                    correctAnswer = ""
+                    correctAnswer =  Marking_requestAndReceiveFromQB(isJavaQB, requestForAns)
 
                     # Dislay the incorrect answer and correct answer side by side
-                    additionalInfo = compareAnswersHTML(userAnswer, correctAnswer)
+                    additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
                 
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
 
-                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
+                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
 
         elif username in loginDict and loginDict[username] == password:
             # Perform the login validation (e.g., check against a database)    

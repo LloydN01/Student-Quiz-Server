@@ -49,6 +49,7 @@ public class QB {
                 // Read from client
                 // TODO redo this shit (SUNNY JOB)
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
+
                 String flag = receivedString.substring(0, 5); //get the flag
                 receivedString = receivedString.substring(5); //remove the flag from the string
 
@@ -125,6 +126,12 @@ public class QB {
                             writer.flush();
                             break;
                         case "$ANS$":
+                            id = Integer.parseInt(receivedString);
+                            question = readQuestions.get(id);
+                            index = question.lastIndexOf("$");
+                            correctAns = question.substring(index+1);
+                            writer.println(correctAns);
+                            writer.flush(); 
                             break;
                 }
             }
