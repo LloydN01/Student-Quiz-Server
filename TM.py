@@ -185,6 +185,15 @@ def generateQuestionsHTML(questionPacket, username):
 
     return content
 
+# Creates the HTML that displays the incorrect answer given by user and correct answer provided by QB
+def compareAnswersHTML(answer, correctAnswer):
+    # After the third incorrect attempt, the incorrect answer given by user and correct answer provided by QB are displayed side by side
+    content  = "<div><p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Your Answer: <br>{}</p>".format(answer)
+    content += "<p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Correct Answer: <br>{}</p></div>".format(correctAnswer)
+
+    return content
+
+
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # In the userQuestionsDB.txt -> {'username':{
     #                                   completed: <Bool>, 
@@ -329,7 +338,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 elif "Python" in questionKey:
                     id = questionKey.replace('Python',"",1)
 
-                answerToQB = id + "$" + userAnswer
+                answerToQB = id + "$" + userAnswer # Format the answer to be sent to the QB
 
                 if isJavaQB:
                     javaQB.sendall(bytes(answerToQB + "\n", "utf-8"))
@@ -340,11 +349,26 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the answer to be received from the QB
                 receivedMark = marked[0].recv(1024).decode().strip() # Receive either "correct" or "wrong"
                 
+                additionalInfo = "" # Stores the additional information that will be displayed to the user
+
                 questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] += 1 # Increment the attempt number for the question
                 if receivedMark == "correct":
                     currAttempt = questionsDict[username]["attempts"][questionsDict[username]["questionNum"]]
                     # If the answer is correct, set the mark
                     questionsDict[username]["marks"][questionsDict[username]["questionNum"]] = 4 - currAttempt
+                elif receivedMark == "wrong" and questionsDict[username]["attempts"][questionsDict[username]["questionNum"]] == 3:
+                    # If the answer is wrong on the 3rd attempt -> remove submit button -> request for correct answer to QB -> receive correct answer -> display to user
+
+                    # TODO: send request to QB for correct answer
+                    # TODO: receive correct answer from QB
+
+
+
+                    # Receive the correct answer from QB
+                    correctAnswer = ""
+
+                    # Dislay the incorrect answer and correct answer side by side
+                    additionalInfo = compareAnswersHTML(userAnswer, correctAnswer)
                 
                 userQuestions = questionsDict[username]["questions"]
                 currQuestionNum = questionsDict[username]["questionNum"]
