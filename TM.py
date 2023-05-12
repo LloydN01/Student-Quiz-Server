@@ -56,13 +56,20 @@ def isQuestionComplete(username, questionNumber):
     else:
         return False
     
-# Returns the total up-to-date mark of the user
-def getTotalMark(username):
-    totalMarks = 0
-    for mark in questionsDict[username]["marks"]:
-        totalMarks += mark
-    
-    return totalMarks
+# Returns the total up-to-date status of the test for the user
+def getTestStatus(username):
+    totalNumQuestions = len(questionsDict[username]["questions"])
+    totalNumQuestionsCompleted = (len([mark for mark in questionsDict[username]["marks"] if mark > 0]) + 
+                                  len([attempt for attempt in questionsDict[username]["attempts"] if attempt == 3]))
+    currentTotalMark = sum(questionsDict[username]["marks"])
+    availableMarks = totalNumQuestions * 3
+
+    content = "<p>Test Status:<br>"
+    content += "You have completed {} out of {} questions. <br>".format(totalNumQuestionsCompleted, totalNumQuestions)
+    content += "You have received {} marks out of {} available marks. <br>".format(currentTotalMark, availableMarks)
+    content += "</p>"
+
+    return content
 
 # Creates the HTML for the login page
 def login_page():
@@ -185,7 +192,7 @@ def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
     index = questionsDict[username]["questions"].index(questionPacket) # Get the index of the current question for the user eg -> Qx) where x is index
     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
     content = ""
-    content += "<p>Up-To-Date Total Mark: <b>{}</b></p>".format(getTotalMark(username))
+    content += getTestStatus(username)
     if questionType == "MC":
         # If question is multiple choice
         questionBody, options = convertToMultipleChoice(question)
