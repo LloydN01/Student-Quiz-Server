@@ -8,17 +8,9 @@ import ast
 import json
 
 
-# Function that creates Javascript that enables the use of tab for indentations
-def enableTabPresses():
-    # Code was copied from https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
-    content = "<script>"
-    content += "document.getElementById('textbox').addEventListener('keydown', function(e) {"
-    content += "if (e.key == 'Tab') { e.preventDefault(); var start = this.selectionStart; var end = this.selectionEnd;"
-    content += "this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);"
-    content += "this.selectionStart = this.selectionEnd = start + 1;}});"
-    content += "</script>"
-
-    return content
+############################################################################################
+# Functions relating to requesting, receiving, manipulating, and keeping track of questions
+############################################################################################
 
 # Randomly choose the number of questions requested to each server
 def randomiseQuestionNumbers():
@@ -55,6 +47,38 @@ def isQuestionComplete(username, questionNumber):
         return True
     else:
         return False
+    
+# USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
+def Marking_requestAndReceiveFromQB(isJavaQB, request):
+    if isJavaQB:
+        javaQB.sendall(bytes(request, "utf-8"))
+    else:
+        pythonQB.sendall(bytes(request, "utf-8"))
+
+    # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
+    # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
+    marked = []
+    marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the data to be received from the QB
+    received = marked[0].recv(1024).decode().strip() # Receive data
+
+    return received
+
+
+############################################################################################
+# Functions that generates the HTML for the pages
+############################################################################################
+
+# Function that creates Javascript that enables the use of tab for indentations
+def enableTabPresses():
+    # Code was copied from https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
+    content = "<script>"
+    content += "document.getElementById('textbox').addEventListener('keydown', function(e) {"
+    content += "if (e.key == 'Tab') { e.preventDefault(); var start = this.selectionStart; var end = this.selectionEnd;"
+    content += "this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);"
+    content += "this.selectionStart = this.selectionEnd = start + 1;}});"
+    content += "</script>"
+
+    return content
     
 # Returns the total up-to-date status of the test for the user
 def getTestStatus(username):
@@ -96,6 +120,10 @@ def login_page():
 def index_page(username):
     content = "<html><head><title>localhost</title></head>"
     content += "<body>"
+    content += "<h1>Welcome {}</h1>".format(username)
+    content += "<form action='/' method='get'>"
+    content += "<input type='submit' name='logout' value='Logout'>"
+    content += "</form>"
     content += "<p>Click to get 5 random questions.</p>"
     content += "<form action='/questions' method='post'>"
     content += "<input type='submit' name='get-questions' value='Randomise'>"
@@ -131,7 +159,7 @@ def generateCurrentStatus(mark, attempt):
 # Creates the HTML for the multiple choice question
 def multipleChoice(questionNumber, question, options, username, questionKey):
     # Question
-    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber + 1, username, question)
+    content = "<p>Q{} for <b>{}</b>)<br>{}</p>".format(questionNumber + 1, username, question)
     content += "<form action='/questions' method='post'>"
     # Options
     for option in options:
@@ -164,7 +192,7 @@ def multipleChoice(questionNumber, question, options, username, questionKey):
 # Creates the HTML for the short answer question
 def shortAnswer(questionNumber, question, username, questionKey):
     # Question
-    content = "<p>Q{} for {})<br>{}</p>".format(questionNumber + 1, username, question)
+    content = "<p>Q{} for <b>{}</b>)<br>{}</p>".format(questionNumber + 1, username, question)
     content += "<form action='/questions' method='post'>"
     # Answer
     content += "<textarea id='textbox' name='answer' style='width: 550px; height: 250px;', placeholder='Type here'></textarea>"
@@ -197,7 +225,9 @@ def shortAnswer(questionNumber, question, username, questionKey):
 def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
     index = questionsDict[username]["questions"].index(questionPacket) # Get the index of the current question for the user eg -> Qx) where x is index
     questionNum, questionLang, questionType, question = questionPacket.split("$", 3)
-    content = ""
+    content = "<form action='/' method='get'>"
+    content += "<input type='submit' name='logout' value='Logout'>"
+    content += "</form>"
     content += getTestStatus(username)
     if questionType == "MC":
         # If question is multiple choice
@@ -218,22 +248,10 @@ def compareAnswersHTML(answer, correctAnswer):
 
     return content
 
-# USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
-def Marking_requestAndReceiveFromQB(isJavaQB, request):
-    if isJavaQB:
-        javaQB.sendall(bytes(request, "utf-8"))
-    else:
-        pythonQB.sendall(bytes(request, "utf-8"))
 
-    # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
-    # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
-    marked = []
-    marked, _ , _ = select.select(inputs, outputs, inputs) # Wait for the data to be received from the QB
-    received = marked[0].recv(1024).decode().strip() # Receive data
-
-    return received
-
-
+############################################################################################
+# HTTP Request Handler Class that handles all the requests made by the client
+############################################################################################
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # In the userQuestionsDB.txt -> {'username':{
     #                                   completed: <Bool>, 
@@ -243,6 +261,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     #                                   marks: [<List of marks>],
     #                                   attempts: [<List of attempts>]}}
 
+    # Set the response header and send the response to the client
     def _set_response(self, content):
         # Everytime a request is made, the userQuestionsDB.txt file is updated
         with open("userQuestionsDB.txt", "w") as questionsDB:
@@ -254,14 +273,20 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         
         self.wfile.write(bytes(content, "utf-8"))
 
+    # Handles the GET request made by the client
     def do_GET(self):
-        if self.path == "/":
+        # Obtain the key-value pairs from the query string
+        get_data = urlparse(self.path).query
+        data = parse_qs(get_data)
+
+        if self.path == "/" or "logout" in data:
             # Request the login page
             content = login_page()
             self._set_response(content)
         else:
             self.send_error(404, "File not found {}".format(self.path))
 
+    # Handles the POST request made by the client
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
@@ -436,6 +461,11 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
         # Send the HTML content to the client
         self._set_response(HTMLContent)
+
+
+############################################################################################
+# main function to start the server and listen for connections 
+############################################################################################ 
 
 if __name__ == '__main__':
     # Read the login database
