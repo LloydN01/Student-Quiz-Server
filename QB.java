@@ -21,14 +21,15 @@ public class QB {
             port = 9999;
             serverType = "Java";
         }
+        String ip_address = args[1];
 
         ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
 
-        ServerSocket serverSocket = null;
+        Socket serverSocket = null;
         boolean listening = true;
 
         try {
-            serverSocket = new ServerSocket(port); // set port number
+            serverSocket = new Socket(ip_address,port); // set port number
             // Print Server Port Number
             System.out.println(serverType + " Server is listening on port " + port);
         } catch (IOException e) {
@@ -38,14 +39,14 @@ public class QB {
 
         while (listening) {
             // wait for client connection
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
+            // Socket clientSocket = serverSocket.accept();
+            // System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
             Scanner scanner = new Scanner(System.in);
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(serverSocket.getOutputStream(), true);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 
-            while(clientSocket.isConnected()){
+            while(serverSocket.isConnected()){
                 // Read from client
                 // TODO redo this shit (SUNNY JOB)
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
@@ -140,7 +141,7 @@ public class QB {
             try {
                 writer.close();
                 reader.close();
-                clientSocket.close();
+                serverSocket.close();
                 scanner.close();
             } catch (IOException e) {
                 e.printStackTrace();

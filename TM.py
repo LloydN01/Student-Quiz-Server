@@ -7,7 +7,6 @@ import random
 import ast
 import json
 
-
 # Function that creates Javascript that enables the use of tab for indentations
 def enableTabPresses():
     # Code was copied from https://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
@@ -34,8 +33,8 @@ def getQuestionsFromServer(numQuestions):
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
-    javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
-    pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
+    java_conn.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
+    python_conn.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
@@ -221,9 +220,9 @@ def compareAnswersHTML(answer, correctAnswer):
 # USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
 def Marking_requestAndReceiveFromQB(isJavaQB, request):
     if isJavaQB:
-        javaQB.sendall(bytes(request, "utf-8"))
+        java_conn.sendall(bytes(request, "utf-8"))
     else:
-        pythonQB.sendall(bytes(request, "utf-8"))
+        python_conn.sendall(bytes(request, "utf-8"))
 
     # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
     # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
@@ -439,6 +438,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     # Read the login database
+    print(socket.gethostbyname(socket.gethostname()))
     with open('loginDB.txt', 'r') as loginFile:
         loginInfo = loginFile.read()
 
@@ -454,20 +454,20 @@ if __name__ == '__main__':
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
 
-    HOST1 = "" # IP for device running Java QB
-    HOST2 = "" # IP for device running Python QB
+    HOST1 = socket.gethostbyname(socket.gethostname()) # IP for device running Java QB
+    HOST2 = socket.gethostbyname(socket.gethostname()) # IP for device running Python QB
 
     # Get the host from the command line
-    if len(argv) == 3:
-        HOST1 = str(argv[1])
-        HOST2 = str(argv[2])
-        print("Connected to two different QBs on different machines")
-    elif len(argv) == 2:
-        HOST1 = HOST2 = str(argv[1])
-        print("Connected to two dfferent QBs running on same machine")
-    else:
-        print("Need at least one IP for QB")
-        quit()
+    # if len(argv) == 3:
+    #     HOST1 = str(argv[1])
+    #     HOST2 = str(argv[2])
+    #     print("Connected to two different QBs on different machines")
+    # elif len(argv) == 2:
+    #     HOST1 = HOST2 = str(argv[1])
+    #     print("Connected to two dfferent QBs running on same machine")
+    # else:
+    #     print("Need at least one IP for QB")
+    #     quit()
 
     # Set the ports
     JAVA_PORT = 9999
@@ -478,19 +478,30 @@ if __name__ == '__main__':
     pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Connect to the servers
-    javaQB.connect((HOST1, JAVA_PORT))
-    pythonQB.connect((HOST2, PYTHON_PORT))
+    # javaQB.connect((HOST1, JAVA_PORT))
+    # pythonQB.connect((HOST2, PYTHON_PORT))
+    javaQB.bind((HOST1,JAVA_PORT))
+    pythonQB.bind((HOST2,PYTHON_PORT))
+    javaQB.listen(1)
+    pythonQB.listen(1)
+    # Wait for a client to connect to each socket
+    java_conn, java_addr = javaQB.accept()
+    python_conn, python_addr = pythonQB.accept()
 
+    # Print the address of each client
+    print(f"Java client connected from {java_addr}")
+    print(f"Python client connected from {python_addr}")
     # Check that both servers are connected
-    if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
-        print("Connected to both servers")
-
+    # if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
+    #     print("Connected to both servers")
+    # javaQB.accept()
+    # pythonQB.accept()
     # Set the sockets to non-blocking
     javaQB.setblocking(False)
     pythonQB.setblocking(False)
 
     # Add the sockets to the inputs list
-    inputs = [javaQB, pythonQB]
+    inputs = [java_conn, python_conn]
     outputs = []
 
     port = 5000
