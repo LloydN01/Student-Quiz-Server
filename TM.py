@@ -21,13 +21,25 @@ def randomiseQuestionNumbers():
     return (numFromJava, numFromPython)
 
 # Send the request for questions to each server
-def getQuestionsFromServer(numQuestions):
+def getQuestionsFromServer(numQuestions, myList):
     # Get the number of questions from each server
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
     javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
     pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
+
+    select.select(inputs, outputs, inputs)
+
+    for i in range(numJavaQuestions):
+        # Receive the question from the server
+        question = javaQB.recv(1024).decode("utf-8")
+        myList.append(question)
+
+    for i in range(numPythonQuestions):
+        # Receive the question from the server
+        question = pythonQB.recv(1024).decode("utf-8")
+        myList.append(question)
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
