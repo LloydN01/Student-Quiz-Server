@@ -63,6 +63,7 @@ def Marking_requestAndReceiveFromQB(isJavaQB, request):
 
     return received
 
+# Checks if TM and QBs are still connected by sending a PING and recieving a PONG
 def PingPong():
     try:
         java_conn.sendall(bytes("PING\n","utf-8"))
@@ -81,6 +82,8 @@ def PingPong():
 ############################################################################################
 # Functions that generates the HTML for the pages
 ############################################################################################
+
+# HTML page that notifies users when QB disconnects from the TM
 def disconnectedQBHTML():
   content = ""
   content += "<h1>QB has been disconnected</h1>"
@@ -289,12 +292,13 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # when the user clicks the logout button or when the user clicks the back/next button
     ##########################################################################
     def do_GET(self):
-        # Obtain the key-value pairs from the query string
+        # Checks if TM is still connected to both QBs -> If not, let user know
         res = PingPong()
         if res == 0:
             self._set_response(disconnectedQBHTML())
             return 0
 
+        # Obtain the key-value pairs from the query string
         get_data = urlparse(self.path).query
         data = parse_qs(get_data)
 
@@ -399,6 +403,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # or submits their username and password to login
     ##########################################################################
     def do_POST(self):
+        # Checks if TM is still connected to QBs -> If not, notify user
         res = PingPong()
         if res == 0:
             self._set_response(disconnectedQBHTML())
@@ -497,7 +502,6 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     # Read the login database
-    print(socket.gethostbyname(socket.gethostname()))
     with open('loginDB.txt', 'r') as loginFile:
         loginInfo = loginFile.read()
 
@@ -514,6 +518,7 @@ if __name__ == '__main__':
     loginDict = ast.literal_eval(loginInfo)
 
     HOST = socket.gethostbyname(socket.gethostname()) # IP for device running Java QB and running Python QB
+    print(HOST) # Print the IP address of the device running the server
 
     # Set the ports
     JAVA_PORT = 9999
