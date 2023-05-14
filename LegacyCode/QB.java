@@ -18,7 +18,7 @@ public class QB {
             serverType = "Java";
         }
 
-        String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
+        // String readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
         
         ServerSocket serverSocket = null;
         boolean listening = true;
