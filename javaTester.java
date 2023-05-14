@@ -7,7 +7,7 @@ import java.io.IOException;
 public class javaTester {
     public static void main(String[] args) throws Exception {
         // Java code to be executed
-        String code = "public class MyClass {public static int myMethod(int a,int b) { return (a + b); } }";
+        String code = "public class MyClass {public static int myMethod(int a) { return (a+2) * (a+2); } }";
         System.out.println("Max: " + max(1,2));
         System.out.println("Sum: " + sum(1,2));
         System.out.println("Even: " + evenOrOdds(4));
@@ -22,7 +22,7 @@ public class javaTester {
         createFile(filePath, code); // Assume FileManager is a utility class to create files
         int a = 3; 
         int b = 7;
-        int Q_ID = 8;
+        int Q_ID = 14;
         String correct_output = "";
         // Compile the Java file
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -35,18 +35,23 @@ public class javaTester {
         //compiledClass.getMethod("myMethod",int.class,int.class);
         Object returnValue = null;
         switch (Q_ID){ 
-            case 8:
+            case 11:
                 correct_output = Integer.toString(sum(a,b));
                 method = compiledClass.getMethod("myMethod",int.class,int.class);
                 returnValue = (int) method.invoke(null,a,b);
                 break;
-            case 9: 
+            case 12: 
                 correct_output = Integer.toString(max(a,b));
                 method = compiledClass.getMethod("myMethod",int.class,int.class);
                 returnValue = (int) method.invoke(null,a,b);
                 break; 
-            case 10: 
+            case 13: 
                 correct_output = evenOrOdds(a);
+                method = compiledClass.getMethod("myMethod",int.class);
+                returnValue = method.invoke(null,a);
+                break;
+            case 14: 
+                correct_output = Integer.toString(addTwoSquare(a));
                 method = compiledClass.getMethod("myMethod",int.class);
                 returnValue = method.invoke(null,a);
                 break;
@@ -72,6 +77,10 @@ public class javaTester {
     //Even or odd 
     public static String evenOrOdds(int a){ 
         return a % 2 == 0 ? "Even":"Odd";
+    }
+    //Add two and square
+    public static int addTwoSquare(int a){ 
+        return (int) Math.pow(a+2,2);
     }
     public static void createFile(String filePath, String content) {
         try {

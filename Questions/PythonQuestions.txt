@@ -7,6 +7,9 @@ MC$What is the output of the following code snippet in Python?<br>for i in range
 MC$What value is printed by the print statement?<br>a = [[1,2],[3,4],[5,[6,7]]]<br>print(a[2][1][1])$6,/3/5/7$7
 MC$What value results from this expression?<br>(7%5)*2$4/6/60/Error$4
 MC$What type of value is "2.01" in python?$float/integer/String/double$String
+MC$Which of the following is a set?$["a","b","c"]/{"first" : "a", "second": "b", "third" : "b"}/{"a", "b", "c"}/("a", "b", "c")${"a", "b", "c"}
+MC$What is the result of "1" * 2 + 3$23/5/113/TypeError$TypeError
+MC$Which of these will NOT print hello world in python 3.8, given that x = "hello"?$print(x + " world")/print(f'{x} world')/print(str("x") + " world")/print('%s world'%(x))$print(str("x") + " world")
 SA$Write a Python program to print "Hello, World!" to the console. 
 SA$Write a Python program to calculate the sum of two numbers entered by the user.
 SA$Write a Python program to find the maximum of two numbers entered by the user.
