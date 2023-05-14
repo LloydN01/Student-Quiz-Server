@@ -7,7 +7,10 @@ import java.io.IOException;
 public class javaTester {
     public static void main(String[] args) throws Exception {
         // Java code to be executed
-        String code = "public class MyClass {public static void myMethod() { System.out.print(\"Hello, World!\"); } }";
+        String code = "public class MyClass {public static int myMethod(int a,int b) { return (a + b); } }";
+        System.out.println("Max: " + max(1,2));
+        System.out.println("Sum: " + sum(1,2));
+        System.out.println("Even: " + evenOrOdds(4));
         System.out.print(tester(code));
     }
 
@@ -17,20 +20,59 @@ public class javaTester {
         String fileName = className + ".java";
         String filePath = System.getProperty("user.dir") + "/" + fileName;
         createFile(filePath, code); // Assume FileManager is a utility class to create files
-
+        int a = 3; 
+        int b = 7;
+        int Q_ID = 8;
+        String correct_output = "";
         // Compile the Java file
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, filePath);
-
         // Load the compiled class
         Class<?> compiledClass = Class.forName(className);
 
         // Invoke the method using reflection
-        Method method = compiledClass.getMethod("myMethod");
-        Object returnValue = method.invoke(null);
-        return String.valueOf(returnValue);
+        Method method = null; 
+        //compiledClass.getMethod("myMethod",int.class,int.class);
+        Object returnValue = null;
+        switch (Q_ID){ 
+            case 8:
+                correct_output = Integer.toString(sum(a,b));
+                method = compiledClass.getMethod("myMethod",int.class,int.class);
+                returnValue = (int) method.invoke(null,a,b);
+                break;
+            case 9: 
+                correct_output = Integer.toString(max(a,b));
+                method = compiledClass.getMethod("myMethod",int.class,int.class);
+                returnValue = (int) method.invoke(null,a,b);
+                break; 
+            case 10: 
+                correct_output = evenOrOdds(a);
+                method = compiledClass.getMethod("myMethod",int.class);
+                returnValue = method.invoke(null,a);
+                break;
+        }
+        String their_answer= returnValue.toString();
+        System.out.println("RETURNED: " + their_answer);
+        System.out.println("CORRECT: " + correct_output);
+        if (their_answer.equals(correct_output)){
+            System.out.println("Success");
+        } else { 
+            System.out.println("Failure");
+        }
+        return "The return value is:" + returnValue.toString();
     }
-
+    //Sum of 2 numbers 
+    public static int sum(int a,int b){ 
+        return a + b;
+    }
+    //Maximum of 2 numbers 
+    public static int max(int a,int b){ 
+        return a > b ? a : b;
+    }
+    //Even or odd 
+    public static String evenOrOdds(int a){ 
+        return a % 2 == 0 ? "Even":"Odd";
+    }
     public static void createFile(String filePath, String content) {
         try {
             File file = new File(filePath);
