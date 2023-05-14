@@ -1,0 +1,1 @@
+public class MyClass {public static int myMethod(int a,int b) { return (a + b); } }
