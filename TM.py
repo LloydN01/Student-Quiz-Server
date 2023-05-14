@@ -86,8 +86,9 @@ def PingPong():
 # HTML page that notifies users when QB disconnects from the TM
 def disconnectedQBHTML():
   content = ""
-  content += "<h1>QB has been disconnected</h1>"
-  content += "<p>Please try refreshing again next time</p>"
+  content += "<h1>QB has been disconnected: TEST PAUSED</h1>"
+  content += "<p>Your progress has been automatically saved."
+  content += "<br>Please try reconnecting at a later time.</p>"
   return content
 
 # Function that creates Javascript that enables the use of tab for indentations
