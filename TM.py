@@ -532,8 +532,11 @@ if __name__ == '__main__':
     # Makes the servers
     javaQB.bind((HOST,JAVA_PORT))
     pythonQB.bind((HOST,PYTHON_PORT))
+
+    # Listen for a QB to connect to each socket
     javaQB.listen(1)
     pythonQB.listen(1)
+
     # Wait for a client to connect to each socket
     java_conn, java_addr = javaQB.accept()
     python_conn, python_addr = pythonQB.accept()
@@ -554,5 +557,4 @@ if __name__ == '__main__':
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
     print('Starting httpd on port', port)
-    print("website is {}:{}".format(HOST,port))
     httpd.serve_forever()
