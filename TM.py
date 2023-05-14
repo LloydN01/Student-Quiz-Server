@@ -63,6 +63,20 @@ def Marking_requestAndReceiveFromQB(isJavaQB, request):
 
     return received
 
+def PingPong():
+    try:
+        java_conn.sendall(bytes("PING\n","utf-8"))
+        python_conn.sendall(bytes("PING\n","utf-8"))
+    except:
+        print("QB cannot receive")
+        return 0
+    print('sending PING')
+    data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
+    if not data1 or not data2:
+        print("QB cannot send")
+        return 0
+    return 1
+
 
 ############################################################################################
 # Functions that generates the HTML for the pages
@@ -276,17 +290,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     ##########################################################################
     def do_GET(self):
         # Obtain the key-value pairs from the query string
-        try:
-            java_conn.sendall(bytes("PING\n","utf-8"))
-            python_conn.sendall(bytes("PING\n","utf-8"))
-        except:
-            print("QB cannot receive")
-            self._set_response(disconnectedQBHTML())
-            return 0
-        print('sending PING')
-        data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
-        if not data1 or not data2:
-            print("QB cannot send")
+        res = PingPong()
+        if res == 0:
             self._set_response(disconnectedQBHTML())
             return 0
 
@@ -394,16 +399,8 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # or submits their username and password to login
     ##########################################################################
     def do_POST(self):
-        try:
-            java_conn.sendall(bytes("PING\n","utf-8"))
-            python_conn.sendall(bytes("PING\n","utf-8"))
-        except:
-            print("QB cannot receive")
-            self._set_response(disconnectedQBHTML())
-            return 0
-        data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
-        if not data1 or not data2:
-            print("QB cannot send")
+        res = PingPong()
+        if res == 0:
             self._set_response(disconnectedQBHTML())
             return 0
 
@@ -516,20 +513,7 @@ if __name__ == '__main__':
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
 
-    HOST1 = socket.gethostbyname(socket.gethostname()) # IP for device running Java QB
-    HOST2 = socket.gethostbyname(socket.gethostname()) # IP for device running Python QB
-
-    # Get the host from the command line
-    # if len(argv) == 3:
-    #     HOST1 = str(argv[1])
-    #     HOST2 = str(argv[2])
-    #     print("Connected to two different QBs on different machines")
-    # elif len(argv) == 2:
-    #     HOST1 = HOST2 = str(argv[1])
-    #     print("Connected to two dfferent QBs running on same machine")
-    # else:
-    #     print("Need at least one IP for QB")
-    #     quit()
+    HOST = socket.gethostbyname(socket.gethostname()) # IP for device running Java QB and running Python QB
 
     # Set the ports
     JAVA_PORT = 9999
@@ -539,11 +523,9 @@ if __name__ == '__main__':
     javaQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Connect to the servers
-    # javaQB.connect((HOST1, JAVA_PORT))
-    # pythonQB.connect((HOST2, PYTHON_PORT))
-    javaQB.bind((HOST1,JAVA_PORT))
-    pythonQB.bind((HOST2,PYTHON_PORT))
+    # Makes the servers
+    javaQB.bind((HOST,JAVA_PORT))
+    pythonQB.bind((HOST,PYTHON_PORT))
     javaQB.listen(1)
     pythonQB.listen(1)
     # Wait for a client to connect to each socket
@@ -551,13 +533,9 @@ if __name__ == '__main__':
     python_conn, python_addr = pythonQB.accept()
 
     # Print the address of each client
-    print(f"Java client connected from {java_addr}")
-    print(f"Python client connected from {python_addr}")
-    # Check that both servers are connected
-    # if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
-    #     print("Connected to both servers")
-    # javaQB.accept()
-    # pythonQB.accept()
+    print(f"Java client connected from {java_addr[0]}")
+    print(f"Python client connected from {python_addr[0]}")
+    
     # Set the sockets to non-blocking
     javaQB.setblocking(False)
     pythonQB.setblocking(False)
@@ -570,4 +548,5 @@ if __name__ == '__main__':
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
     print('Starting httpd on port', port)
+    print("website is {}:{}".format(HOST,port))
     httpd.serve_forever()
