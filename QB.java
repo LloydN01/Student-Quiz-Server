@@ -50,92 +50,100 @@ public class QB {
                 // Read from client
                 // TODO redo this shit (SUNNY JOB)
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
-
-                String flag = receivedString.substring(0, 5); //get the flag
-                receivedString = receivedString.substring(5); //remove the flag from the string
-
-                //Variables
-                String[] splittedStrings;
-                int id;
-                String ans;
-                String question;
-                int index;
-                String correctAns;
-
-                switch (flag){
-                        //Requesting Questions
-                        //Format is n - where n is the number of questions requested
-
-                        case "$REQ$":
-                            int numQuestions = Integer.parseInt(receivedString);
-                            System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
-
-                            // Generate random questions
-                            String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
-                            
-                            // Send custom message to client
-                            String questions = concatenateQuestions(randomQuestions);
-                            writer.println(questions);
-                            writer.flush();
-                            System.out.println("Questions sent to TM");
-                            break;
-                        //Marking a multiple choice question
-                        //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
-                        case "$MCQ$":
-                            
-                            splittedStrings = receivedString.split("\\$");
-                            //get the id of the question
-                            id = Integer.parseInt(splittedStrings[0]);
-                            //get the answer of the user
-                            ans = splittedStrings[1];
-                            //get the actual question
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            if (ans.equals(correctAns)){
-                                writer.println("correct");
-                            }
-                            else{
-                                writer.println("wrong");
-                            }
-                            writer.flush();
-                            break;
-                        case "$SAQ$":
-                            splittedStrings = receivedString.split("\\$");
-                            //get the id of the question
-                            id = Integer.parseInt(splittedStrings[0]);
-                            //get the answer of the user
-                            ans = splittedStrings[1];
-                            String userAns;
-                            
-                            if (serverType == "Python"){ 
-                                userAns = pythonTester(ans);
-                            }
-                            else{
-                                userAns = javaTester(ans);
-                            }
-
-                            //get the actual question
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            if (userAns.equals(correctAns)){
-                                writer.println("correct");
-                            }
-                            else{
-                                writer.println("wrong");
-                            }
-                            writer.flush();
-                            break;
-                        case "$ANS$":
-                            id = Integer.parseInt(receivedString);
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            writer.println(correctAns);
-                            writer.flush(); 
-                            break;
+                if (receivedString.equals("PING")){
+                    // System.out.println("Received PING");
+                    writer.println("PONG");
+                    writer.flush();
+                    // System.out.println("Sending PONG");
                 }
+                else{
+                    String flag = receivedString.substring(0, 5); //get the flag
+                    receivedString = receivedString.substring(5); //remove the flag from the string
+    
+                    //Variables
+                    String[] splittedStrings;
+                    int id;
+                    String ans;
+                    String question;
+                    int index;
+                    String correctAns;
+    
+                    switch (flag){
+                            //Requesting Questions
+                            //Format is n - where n is the number of questions requested
+    
+                            case "$REQ$":
+                                int numQuestions = Integer.parseInt(receivedString);
+                                System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
+    
+                                // Generate random questions
+                                String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                                
+                                // Send custom message to client
+                                String questions = concatenateQuestions(randomQuestions);
+                                writer.println(questions);
+                                writer.flush();
+                                System.out.println("Questions sent to TM");
+                                break;
+                            //Marking a multiple choice question
+                            //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
+                            case "$MCQ$":
+                                
+                                splittedStrings = receivedString.split("\\$");
+                                //get the id of the question
+                                id = Integer.parseInt(splittedStrings[0]);
+                                //get the answer of the user
+                                ans = splittedStrings[1];
+                                //get the actual question
+                                question = readQuestions.get(id);
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+                                if (ans.equals(correctAns)){
+                                    writer.println("correct");
+                                }
+                                else{
+                                    writer.println("wrong");
+                                }
+                                writer.flush();
+                                break;
+                            case "$SAQ$":
+                                splittedStrings = receivedString.split("\\$");
+                                //get the id of the question
+                                id = Integer.parseInt(splittedStrings[0]);
+                                //get the answer of the user
+                                ans = splittedStrings[1];
+                                String userAns;
+                                
+                                if (serverType == "Python"){ 
+                                    userAns = pythonTester(ans);
+                                }
+                                else{
+                                    userAns = javaTester(ans);
+                                }
+    
+                                //get the actual question
+                                question = readQuestions.get(id);
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+                                if (userAns.equals(correctAns)){
+                                    writer.println("correct");
+                                }
+                                else{
+                                    writer.println("wrong");
+                                }
+                                writer.flush();
+                                break;
+                            case "$ANS$":
+                                id = Integer.parseInt(receivedString);
+                                question = readQuestions.get(id);
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+                                writer.println(correctAns);
+                                writer.flush(); 
+                                break;
+                    }
+                }
+
             }
 
             try {

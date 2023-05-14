@@ -51,9 +51,9 @@ def isQuestionComplete(username, questionNumber):
 # USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
 def Marking_requestAndReceiveFromQB(isJavaQB, request):
     if isJavaQB:
-        javaQB.sendall(bytes(request, "utf-8"))
+        java_conn.sendall(bytes(request, "utf-8"))
     else:
-        pythonQB.sendall(bytes(request, "utf-8"))
+        python_conn.sendall(bytes(request, "utf-8"))
 
     # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
     # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
@@ -67,6 +67,11 @@ def Marking_requestAndReceiveFromQB(isJavaQB, request):
 ############################################################################################
 # Functions that generates the HTML for the pages
 ############################################################################################
+def disconnectedQBHTML():
+  content = ""
+  content += "<h1>QB has been disconnected</h1>"
+  content += "<p>Please try refreshing again next time</p>"
+  return content
 
 # Function that creates Javascript that enables the use of tab for indentations
 def enableTabPresses():
@@ -271,6 +276,20 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     ##########################################################################
     def do_GET(self):
         # Obtain the key-value pairs from the query string
+        try:
+            java_conn.sendall(bytes("PING\n","utf-8"))
+            python_conn.sendall(bytes("PING\n","utf-8"))
+        except:
+            print("QB cannot receive")
+            self._set_response(disconnectedQBHTML())
+            return 0
+        print('sending PING')
+        data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
+        if not data1 or not data2:
+            print("QB cannot send")
+            self._set_response(disconnectedQBHTML())
+            return 0
+
         get_data = urlparse(self.path).query
         data = parse_qs(get_data)
 
@@ -375,6 +394,19 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # or submits their username and password to login
     ##########################################################################
     def do_POST(self):
+        try:
+            java_conn.sendall(bytes("PING\n","utf-8"))
+            python_conn.sendall(bytes("PING\n","utf-8"))
+        except:
+            print("QB cannot receive")
+            self._set_response(disconnectedQBHTML())
+            return 0
+        data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
+        if not data1 or not data2:
+            print("QB cannot send")
+            self._set_response(disconnectedQBHTML())
+            return 0
+
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         data = parse_qs(post_data)
