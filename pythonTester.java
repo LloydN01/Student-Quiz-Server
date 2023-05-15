@@ -25,7 +25,7 @@ public class pythonTester {
         return (int) Math.pow(a+2,2);
     }
     public static String helloWorld(){ 
-        return "Hello world!"
+        return "Hello world!";
     }
     public static String tester(String code){ 
         try {
@@ -42,7 +42,7 @@ public class pythonTester {
             // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3))";
             switch (Q_ID){
                 case 12: 
-                    correct_output = Integer.toString(helloWorld());
+                    correct_output = helloWorld();
                     break; 
                 case 13:
                     params="a,b";
