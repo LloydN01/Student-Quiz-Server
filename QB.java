@@ -115,17 +115,17 @@ public class QB {
                                 String userAns;
                                 
                                 if (serverType == "Python"){ 
-                                    userAns = pythonTester(ans);
+                                    userAns = pythonTester(ans, id);
                                 }
                                 else{
-                                    userAns = javaTester(ans);
+                                    userAns = javaTester(ans, id);
                                 }
     
-                                //get the actual question
-                                question = readQuestions.get(id);
-                                index = question.lastIndexOf("$");
-                                correctAns = question.substring(index+1);
-                                if (userAns.equals(correctAns)){
+                                // //get the actual question
+                                // question = readQuestions.get(id);
+                                // index = question.lastIndexOf("$");
+                                // correctAns = question.substring(index+1);
+                                if (userAns.equals("Correct")){
                                     writer.println("correct");
                                 }
                                 else{
@@ -180,14 +180,14 @@ public class QB {
         return "Hello world!";
     }
 
-    public static String pythonTester(String code){ 
+    public static String pythonTester(String code, int question){ 
         try {
             // // Create a ProcessBuilder object to run the Python interpreter
             ProcessBuilder pb = new ProcessBuilder("python", "-");
             String correct_output = "";
             Process p = pb.start();
-            int Q_ID = 13;
-            int a = 3; 
+            int Q_ID = question;
+            int a = 2; 
             int b = 7;
             String params = "";
             String call = "";
@@ -195,22 +195,22 @@ public class QB {
             // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3))";
             switch (Q_ID){
                 case 12: 
-                    correct_output = helloWorld();
+                    correct_output = "Hello World!";
                     break; 
                 case 13:
                     params="a,b";
                     call = Integer.toString(a) + "," + Integer.toString(b);
-                    correct_output = Integer.toString(sum(a,b));
+                    correct_output = "9";
                     break;
                 case 14: 
                     params = "a,b";
                     call = Integer.toString(a) + "," + Integer.toString(b);
-                    correct_output = Integer.toString(max(a,b));
+                    correct_output = "7";
                     break; 
                 case 15: 
                     call = Integer.toString(a);
                     params = "a";
-                    correct_output = evenOrOdds(a);
+                    correct_output = "even";
                     break;
             }
             code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
@@ -223,25 +223,27 @@ public class QB {
             System.out.println("CORRECT: " + correct_output);
             if (output.equals(correct_output)){
                 System.out.println("Success");
+                return "Correct";
             } else { 
                 System.out.println("Failure");
+                return "Incorrect";
             }
-            return "Hello"; 
+            // return "Hello"; 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return "";
     }
 
-    public static String javaTester(String code) throws Exception{
+    public static String javaTester(String code, int question) throws Exception{
         // Create an in-memory Java file
         String className = "MyClass";
         String fileName = className + ".java";
         String filePath = System.getProperty("user.dir") + "/" + fileName;
         createFile(filePath, code); // Assume FileManager is a utility class to create files
-        int a = 3; 
+        int a = 2; 
         int b = 7;
-        int Q_ID = 14;
+        int Q_ID = question;
         String correct_output = "";
         // Compile the Java file
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -255,22 +257,22 @@ public class QB {
         Object returnValue = null;
         switch (Q_ID){ 
             case 11:
-                correct_output = Integer.toString(sum(a,b));
+                correct_output = "9";
                 method = compiledClass.getMethod("myMethod",int.class,int.class);
                 returnValue = (int) method.invoke(null,a,b);
                 break;
             case 12: 
-                correct_output = Integer.toString(max(a,b));
+                correct_output = "7";
                 method = compiledClass.getMethod("myMethod",int.class,int.class);
                 returnValue = (int) method.invoke(null,a,b);
                 break; 
             case 13: 
-                correct_output = evenOrOdds(a);
+                correct_output = "odd";
                 method = compiledClass.getMethod("myMethod",int.class);
                 returnValue = method.invoke(null,a);
                 break;
             case 14: 
-                correct_output = Integer.toString(addTwoSquare(a));
+                correct_output = "16";
                 method = compiledClass.getMethod("myMethod",int.class);
                 returnValue = method.invoke(null,a);
                 break;
@@ -280,10 +282,12 @@ public class QB {
         System.out.println("CORRECT: " + correct_output);
         if (their_answer.equals(correct_output)){
             System.out.println("Success");
+            return "Correct";
         } else { 
             System.out.println("Failure");
+            return "Incorrect";
         }
-        return "The return value is:" + returnValue.toString();
+        // return "The return value is:" + returnValue.toString();
     }
     public static void createFile(String filePath, String content) {
         try {
