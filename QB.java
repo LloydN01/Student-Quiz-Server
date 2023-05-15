@@ -160,6 +160,26 @@ public class QB {
         serverSocket.close();
     }
     
+    //Sum of 2 numbers 
+    public static int sum(int a,int b){ 
+        return a + b;
+    }
+    //Maximum of 2 numbers 
+    public static int max(int a,int b){ 
+        return a > b ? a : b;
+    }
+    //Even or odd 
+    public static String evenOrOdds(int a){ 
+        return a % 2 == 0 ? "Even":"Odd";
+    }
+    //Add two and square
+    public static int addTwoSquare(int a){ 
+        return (int) Math.pow(a+2,2);
+    }
+    public static String helloWorld(){ 
+        return "Hello world!";
+    }
+
     public static String pythonTester(String code){ 
         try {
             // // Create a ProcessBuilder object to run the Python interpreter
@@ -212,25 +232,6 @@ public class QB {
         }
         return "";
     }
-        //Sum of 2 numbers 
-        public static int sum(int a,int b){ 
-            return a + b;
-        }
-        //Maximum of 2 numbers 
-        public static int max(int a,int b){ 
-            return a > b ? a : b;
-        }
-        //Even or odd 
-        public static String evenOrOdds(int a){ 
-            return a % 2 == 0 ? "Even":"Odd";
-        }
-        //Add two and square
-        public static int addTwoSquare(int a){ 
-            return (int) Math.pow(a+2,2);
-        }
-        public static String helloWorld(){ 
-            return "Hello world!";
-        }
 
     public static String javaTester(String code) throws Exception{
         // Create an in-memory Java file
