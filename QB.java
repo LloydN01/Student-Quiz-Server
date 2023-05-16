@@ -119,7 +119,7 @@ public class QB {
                                 int secondLastIndex = question.lastIndexOf("$", index-1);
                                 String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
 
-                                int params[] = new int[paramsString.length];
+                                Object params[] = new Object[paramsString.length];
                                 for (int i = 0; i < paramsString.length; i++){
                                     params[i] = Integer.parseInt(paramsString[i]);
                                 }
@@ -127,20 +127,25 @@ public class QB {
                                 // replaces the --n with new line characters 
                                 ans = ans.replace("--n", "\n");
 
-                                String userAns;
-                                String actualAns;
+                                String userAns = "1";
+                                String actualAns = "1";
 
                                 if (serverType == "Python"){ 
-                                    userAns = pythonTester(ans, id, params);
-                                    actualAns = pythonTester(correctAns,id, params);
+                                    // userAns = pythonTester(ans, id, params);
+                                    // actualAns = pythonTester(correctAns,id, params);
                                 }
                                 else{
                                     // javaTester returns "" when there is an error -> when user answer is syntactically incorrect
-                                    actualAns = javaTester(correctAns,params.length,params);
+                                    // File file = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
+                                    // file.delete();
+                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.java");
+                                    // file.delete();
                                     userAns = javaTester(ans,params.length, params);
-                                }
-                                for (int i : params){
-                                    System.out.println(i);
+                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
+                                    // file.delete();
+                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.java");
+                                    // file.delete();
+                                    actualAns = javaTester(correctAns,params.length,params);
                                 }
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
@@ -206,30 +211,35 @@ public class QB {
         }
     }
 
-    public static String javaTester(String userCode,int paramCount, int... arguments) throws Exception {
-        try{
-            // Compile the Java file
-            String fileName = "MyClass.java";
-            String filePath = System.getProperty("user.dir") + "/" + fileName;
-            createFile(filePath, userCode);
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            compiler.run(null, null, null, filePath);
-            
-            // Load the compiled class
-            Class<?> compiledClass = Class.forName("MyClass");
-            Class<?>[] argList = new Class[paramCount];
-            Arrays.fill(argList, int.class);
-            // Get the myMethod() method
-            Method method = compiledClass.getMethod("myMethod", argList);
+    public static String javaTester(String userCode,int paramCount, Object... arguments) throws Exception {
+            try{
+                // Compile the Java file
+                String fileName = "MyClass.java";
+                String filePath = System.getProperty("user.dir") + "/" + fileName;
+                createFile(filePath, userCode);
+                JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+                compiler.run(null, null, null, filePath);
+                System.out.println("here");
+                // Load the compiled class
+                Class<?> compiledClass = Class.forName("MyClass");
+                Class<?>[] argList = new Class[paramCount];
+                Arrays.fill(argList, int.class);
+                // Get the myMethod() method
+                Method method = compiledClass.getMethod("myMethod", argList);
+                System.out.println("here2");
+                // Invoke the method using reflection
+                Object returnValue = method.invoke(null, arguments);
+                System.out.println("ijijijiji");
+                String theirAnswer = String.valueOf(returnValue);
+                System.out.println("THIS SHOULDNT BE PRINTED TWICE");
+                System.out.println(userCode);
+                
+                return theirAnswer;
+            }catch(Exception e){
+                
+                return "INVALID BITCH0";
+            }
         
-            // Invoke the method using reflection
-            Object returnValue = method.invoke(null, (Object) arguments);
-            String theirAnswer = String.valueOf(returnValue);
-            System.out.println("ijijijiji"+theirAnswer);
-            return theirAnswer;
-        } catch (Exception e){
-            return "";
-        }
     }
 
     public static void createFile(String filePath, String content) {
@@ -237,8 +247,19 @@ public class QB {
             File file = new File(filePath);
 
             // Create the file if it doesn't exist
-            if (!file.exists()) {
+            if (file.exists()) {
+                file.delete();
                 file.createNewFile();
+                System.out.println("File deleted at: " + filePath);
+            }
+            else{
+                file.createNewFile();
+            }
+            File file2 = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
+
+            if (file2.exists()){
+                file2.delete();
+                System.out.println("File deleted");
             }
 
             // Write the content to the file
