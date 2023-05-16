@@ -112,6 +112,11 @@ public class QB {
                                 id = Integer.parseInt(splittedStrings[0]);
                                 //get the answer of the user
                                 ans = splittedStrings[1];
+
+                                // replaces the --n with new line characters 
+                                ans = ans.replace("--n", "\n");
+                                // System.out.println(ans);
+
                                 String userAns;
                                 
                                 if (serverType == "Python"){ 
@@ -338,11 +343,22 @@ public class QB {
             int randomIndex = rand.nextInt(questionsList.size());
             String question = questionsList.get(randomIndex);
             //gets the number of occurance of $
-            int count = question.length() - question.replace("$", "").length();
+            // int count = question.length() - question.replace("$", "").length();
 
-            // if the number of $ isnt 3, then its a mcq, and the ans should be remvoed 
-            if (count != 3){
-                int index = question.lastIndexOf("$");
+            // // if the number of $ isnt 3, then its a mcq, and the ans should be remvoed 
+            // if (count != 3){
+            //     int index = question.lastIndexOf("$");
+            //     question = question.substring(0,index); // Removing actual answer before sending it to QB
+            // }
+            int index;
+            if (question.contains("$SA$")){
+                index = question.lastIndexOf("$");
+                question = question.substring(0,index); // Removing actual answer before sending it to QB
+                index = question.lastIndexOf("$");
+                question = question.substring(0,index); // Removing actual answer before sending it to QB
+            }
+            else{
+                index = question.lastIndexOf("$");
                 question = question.substring(0,index); // Removing actual answer before sending it to QB
             }
             randomQuestions[i] = question;

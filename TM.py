@@ -463,6 +463,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 questionKey = str(data["questionKey"][0])
                 userAnswer = str(data["answer"][0])
 
+                # replaces the new line character with --n to avoid the java client from not receiving our full message
+                userAnswer = userAnswer.replace("\r\n","--n")
+
+
                 isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
                 id = ""
                 if "Java" in questionKey:
