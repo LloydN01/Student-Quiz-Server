@@ -47,6 +47,16 @@ def isQuestionComplete(username, questionNumber):
         return True
     else:
         return False
+
+# Checks if the user's test is complete
+def isTestComplete(username):
+    userQuestions = questionsDict[username]["questions"]
+    for questionNum in range(len(userQuestions)):
+        if not isQuestionComplete(username, questionNum):
+            # If even one question is incompete -> test it not complete
+            return False
+    questionsDict[username]["completed"] = True
+    return True
     
 # USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
 def Marking_requestAndReceiveFromQB(isJavaQB, request):
@@ -258,6 +268,19 @@ def compareAnswersHTML(answer, correctAnswer):
 
     return content
 
+# Creates the final page for the user -> They see it once they complete the test
+def finalPageHTML(username):
+    content = "<h1>Good Work {}!<br>You have completed the test</h1>".format(username)
+
+    for (num, mark) in enumerate(questionsDict[username]["marks"]):
+        content += "Q{}: {} mark(s)<br>".format(num + 1, mark)
+    content += "Final Mark: {:.2f}%".format((sum(questionsDict[username]["marks"]) /
+                                         (len(questionsDict[username]["marks"]) * 3) *
+                                            100))
+    content += "<form method='get'>"
+    content += "<input type='submit' name='logout' value='Logout'>"
+    content += "</form>"
+    return content
 
 ############################################################################################
 # HTTP Request Handler Class that handles all the requests made by the client
@@ -471,6 +494,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
 
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
+
+                if isTestComplete(username):
+                    # If the test is completed -> Show user the final page
+                    HTMLContent = finalPageHTML(username)
             else:
                 # If "answer" is not in data, then the user has not submitted an answer and just pressed submit
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
@@ -483,7 +510,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # These users have not received their questions yet
                     print("New user {} has been added".format(username))
                     content = index_page(username)
-                    HTMLContent = (content)
+                    HTMLContent = content
+                elif questionsDict[username]["completed"]:
+                    # If user has completed the test already -> return the test completed page
+                    HTMLContent = finalPageHTML(username)
                 else:
                     # If user has received their questions already, redirect them to the questions page where they last left off
                     currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
