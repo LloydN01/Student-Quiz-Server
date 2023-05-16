@@ -38,10 +38,6 @@ public class QB {
         }
 
         while (listening) {
-            // wait for client connection
-            // Socket clientSocket = serverSocket.accept();
-            // System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
-
             Scanner scanner = new Scanner(System.in);
             PrintWriter writer = new PrintWriter(serverSocket.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
@@ -50,10 +46,10 @@ public class QB {
                 // Read from client
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
                 if (receivedString.equals("PING")){
-                    // System.out.println("Received PING");
+                    System.out.println("Received PING");
                     writer.println("PONG");
                     writer.flush();
-                    // System.out.println("Sending PONG");
+                    System.out.println("Sending PONG");
                 }
                 else{
                     String flag = receivedString.substring(0, 5); //get the flag
@@ -84,9 +80,9 @@ public class QB {
                                 writer.flush();
                                 System.out.println("Questions sent to TM");
                                 break;
-                            //Marking a multiple choice question
-                            //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
                             case "$MCQ$":
+                                //Marking a multiple choice question
+                                //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
                                 
                                 splittedStrings = receivedString.split("\\$");
                                 //get the id of the question
@@ -106,29 +102,42 @@ public class QB {
                                 writer.flush();
                                 break;
                             case "$SAQ$":
+                                //Marking a short answer question
+                                //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
+
                                 splittedStrings = receivedString.split("\\$");
                                 //get the id of the question
                                 id = Integer.parseInt(splittedStrings[0]);
                                 //get the answer of the user
                                 ans = splittedStrings[1];
 
+                                //get the actual question
+                                question = readQuestions.get(id);
+
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+
+                                int secondLastIndex = question.lastIndexOf("$", index-1);
+                                String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
+                                
+                                int params[] = new int[paramsString.length];
+                                for (int i = 0; i < paramsString.length; i++){
+                                    params[i] = Integer.parseInt(paramsString[i]);
+                                }
+
                                 // replaces the --n with new line characters 
                                 ans = ans.replace("--n", "\n");
-                                // System.out.println(ans);
 
                                 String userAns;
                                 String actualAns;
 
-                                System.out.println("ASBDIBASIBDUISB");
-                                
                                 if (serverType == "Python"){ 
-                                    userAns = pythonTester(ans, id, intparams);
-                                    actualAns = pythonTester(correctAns,id, intparams);
+                                    userAns = pythonTester(ans, id, params);
+                                    actualAns = pythonTester(correctAns,id, params);
                                 }
                                 else{
-                                    userAns = javaTester(ans, intparams);
-                                    actualAns = javaTester(correctAns, intparams);
-                                    System.out.print(userAns +"SANDONSAOD" + actualAns);
+                                    userAns = javaTester(ans, params);
+                                    actualAns = javaTester(correctAns, params);
                                 }
     
                                 if (userAns.equals(actualAns)){
@@ -166,82 +175,6 @@ public class QB {
         serverSocket.close();
     }
 
-
-    // //Sum of 2 numbers 
-    // public static int sum(int a,int b){ 
-    //     return a + b;
-    // }
-    // //Maximum of 2 numbers 
-    // public static int max(int a,int b){ 
-    //     return a > b ? a : b;
-    // }
-    // //Even or odd 
-    // public static String evenOrOdds(int a){ 
-    //     return a % 2 == 0 ? "Even":"Odd";
-    // }
-    // //Add two and square
-    // public static int addTwoSquare(int a){ 
-    //     return (int) Math.pow(a+2,2);
-    // }
-    // public static String helloWorld(){ 
-    //     return "Hello world!";
-    // }
-
-    // public static String pythonTester(String code, int question){ 
-    //     try {
-    //         // // Create a ProcessBuilder object to run the Python interpreter
-    //         ProcessBuilder pb = new ProcessBuilder("python", "-");
-    //         String correct_output = "";
-    //         Process p = pb.start();
-    //         int Q_ID = question;
-    //         int a = 2; 
-    //         int b = 7;
-    //         String params = "";
-    //         String call = "";
-    //         BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-    //         // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3))";
-    //         switch (Q_ID){
-    //             case 12: 
-    //                 correct_output = "Hello World!";
-    //                 break; 
-    //             case 13:
-    //                 params="a,b";
-    //                 call = Integer.toString(a) + "," + Integer.toString(b);
-    //                 correct_output = "9";
-    //                 break;
-    //             case 14: 
-    //                 params = "a,b";
-    //                 call = Integer.toString(a) + "," + Integer.toString(b);
-    //                 correct_output = "7";
-    //                 break; 
-    //             case 15: 
-    //                 call = Integer.toString(a);
-    //                 params = "a";
-    //                 correct_output = "even";
-    //                 break;
-    //         }
-    //         code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
-    //         p.getOutputStream().write(code.getBytes());
-    //         p.getOutputStream().close();
-    //         String output = out.readLine();
-    //         System.out.println(output);
-    //         p.waitFor();
-    //         System.out.println("RETURNED: " + output);
-    //         System.out.println("CORRECT: " + correct_output);
-    //         if (output.equals(correct_output)){
-    //             System.out.println("Success");
-    //             return "Correct";
-    //         } else { 
-    //             System.out.println("Failure");
-    //             return "Incorrect";
-    //         }
-    //         // return "Hello"; 
-    //     } catch (IOException | InterruptedException e) {
-    //         e.printStackTrace();
-    //     }
-    //     return "";
-    // }
-    
     public static String pythonTester(String userCode, int question, int[] parameter){ 
         try {
             // // Create a ProcessBuilder object to run the Python interpreter
@@ -269,99 +202,28 @@ public class QB {
         }
     }
 
-    // public static String javaTester(String code, int question) throws Exception{
-    //     // Create an in-memory Java file
-    //     String className = "MyClass";
-    //     String fileName = className + ".java";
-    //     String filePath = System.getProperty("user.dir") + "/" + fileName;
-    //     createFile(filePath, code); // Assume FileManager is a utility class to create files
-    //     int a = 2; 
-    //     int b = 7;
-    //     int Q_ID = question;
-    //     String correct_output = "";
-    //     // Compile the Java file
-    //     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    //     compiler.run(null, null, null, filePath);
-    //     // Load the compiled class
-    //     Class<?> compiledClass = Class.forName(className);
-
-    //     // Invoke the method using reflection
-    //     Method method = null; 
-    //     //compiledClass.getMethod("myMethod",int.class,int.class);
-    //     Object returnValue = null;
-    //     switch (Q_ID){ 
-    //         case 11:
-    //             correct_output = "9";
-    //             method = compiledClass.getMethod("myMethod",int.class,int.class);
-    //             returnValue = (int) method.invoke(null,a,b);
-    //             break;
-    //         case 12: 
-    //             correct_output = "7";
-    //             method = compiledClass.getMethod("myMethod",int.class,int.class);
-    //             returnValue = (int) method.invoke(null,a,b);
-    //             break; 
-    //         case 13: 
-    //             correct_output = "odd";
-    //             method = compiledClass.getMethod("myMethod",int.class);
-    //             returnValue = method.invoke(null,a);
-    //             break;
-    //         case 14: 
-    //             correct_output = "16";
-    //             method = compiledClass.getMethod("myMethod",int.class);
-    //             returnValue = method.invoke(null,a);
-    //             break;
-    //     }
-    //     String their_answer= returnValue.toString();
-    //     System.out.println("RETURNED: " + their_answer);
-    //     System.out.println("CORRECT: " + correct_output);
-    //     if (their_answer.equals(correct_output)){
-    //         System.out.println("Success");
-    //         return "Correct";
-    //     } else { 
-    //         System.out.println("Failure");
-    //         return "Incorrect";
-    //     }
-    //     // return "The return value is:" + returnValue.toString();
-    // }
-    // public static void createFile(String filePath, String content) {
-    //     try {
-    //         File file = new File(filePath);
-
-    //         // Create the file if it doesn't exist
-    //         if (!file.exists()) {
-    //             file.createNewFile();
-    //         }
-
-    //         // Write the content to the file
-    //         java.nio.file.Files.write(file.toPath(), content.getBytes());
-    //         System.out.println("File created successfully at: " + filePath);
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
-
-    public static String javaTester(String userCode, int[] parameter) throws Exception{
+    public static String javaTester(String userCode, int... arguments) throws Exception {
         // Create an in-memory Java file
         String className = "MyClass";
         String fileName = className + ".java";
         String filePath = System.getProperty("user.dir") + "/" + fileName;
         createFile(filePath, userCode); // Assume FileManager is a utility class to create files
+        
         // Compile the Java file
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, filePath);
+        
         // Load the compiled class
         Class<?> compiledClass = Class.forName(className);
-
+    
         // Invoke the method using reflection
-        Method method = null; 
-        //compiledClass.getMethod("myMethod",int.class,int.class);
-        Object returnValue = null;
-        method = compiledClass.getMethod("myMethod",int.class,int.class);
-        returnValue = (int) method.invoke(null, parameter[0], parameter[1]);
-        String their_answer= returnValue.toString();
-        return their_answer;
-        // return "The return value is:" + returnValue.toString();
-    }
+        Method method = compiledClass.getMethod("myMethod", int[].class);
+        Object returnValue = method.invoke(null, (Object) arguments);
+        String theirAnswer = String.valueOf(returnValue);
+        
+        return theirAnswer;
+    }   
+
     public static void createFile(String filePath, String content) {
         try {
             File file = new File(filePath);
@@ -410,20 +272,13 @@ public class QB {
         for (int i = 0; i < numQuestions; i++){
             int randomIndex = rand.nextInt(questionsList.size());
             String question = questionsList.get(randomIndex);
-            //gets the number of occurance of $
-            // int count = question.length() - question.replace("$", "").length();
 
-            // // if the number of $ isnt 3, then its a mcq, and the ans should be remvoed 
-            // if (count != 3){
-            //     int index = question.lastIndexOf("$");
-            //     question = question.substring(0,index); // Removing actual answer before sending it to QB
-            // }
             int index;
             if (question.contains("$SA$")){
                 index = question.lastIndexOf("$");
                 question = question.substring(0,index); // Removing actual answer before sending it to QB
                 index = question.lastIndexOf("$");
-                question = question.substring(0,index); // Removing actual answer before sending it to QB
+                question = question.substring(0,index); // Removing test cases answer before sending it to QB
             }
             else{
                 index = question.lastIndexOf("$");

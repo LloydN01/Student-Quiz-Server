@@ -10,5 +10,5 @@ MC$What is the way to print "hello world" in java?$console.log("hello world");/S
 MC$How do you find the length of a string variable s?$s.length();/s.length;/s.size();/s.size;$s.length();
 MC$What would be the result of printing (1 + 2 + "3" + 4)$1234/334/Error/10$334
 SA$Write a Java program to calculate the sum of two numbers entered by the user.$2,3$public class MyClass {public static int myMethod(int num1, int num2) {return num1 + num2;}}
-SA$Write a Java program to check if a number entered by the user is even. Return True or False.$7$public class MyClass {public static String checkEvenOdd(int number) {if (number % 2 == 0) {return "Even";} else {return "Odd";}}}
-SA$Write a Java program to input a number, add two to it and square it.$3$public class MyClass {public static int findNumberAndSquare(int number) {int result = number + 2;result = result * result;return result;}}
+SA$Write a Java program to check if a number entered by the user is even. Return True or False.$7$public class MyClass {public static String myMethod(int number) {if (number % 2 == 0) {return "Even";} else {return "Odd";}}}
+SA$Write a Java program to input a number, add two to it and square it.$3$public class MyClass {public static int myMethod(int number) {int result = number + 2;result = result * result;return result;}}
