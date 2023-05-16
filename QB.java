@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.util.ArrayList;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -46,10 +45,10 @@ public class QB {
                 // Read from client
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
                 if (receivedString.equals("PING")){
-                    System.out.println("Received PING");
+                    // System.out.println("Received PING");
                     writer.println("PONG");
                     writer.flush();
-                    System.out.println("Sending PONG");
+                    // System.out.println("Sending PONG");
                 }
                 else{
                     String flag = receivedString.substring(0, 5); //get the flag
@@ -137,10 +136,14 @@ public class QB {
                                 }
                                 else{
                                     // javaTester returns "" when there is an error -> when user answer is syntactically incorrect
-                                    userAns = javaTester(ans, params);
-                                    actualAns = javaTester(correctAns, params);
+                                    actualAns = javaTester(correctAns,params.length,params);
+                                    userAns = javaTester(ans,params.length, params);
                                 }
-    
+                                for (int i : params){
+                                    System.out.println(i);
+                                }
+                                System.out.println("UserAns"+userAns);
+                                System.out.println("ActualAns"+actualAns);
                                 if (userAns.equals(actualAns)){
                                     writer.println("correct");
                                 }
@@ -203,25 +206,46 @@ public class QB {
         }
     }
 
-    public static String javaTester(String userCode, int... arguments) throws Exception {
+    public static String javaTester(String userCode,int paramCount, int... arguments) throws Exception {
         try{
             // Compile the Java file
+            String fileName = "MyClass.java";
+            String filePath = System.getProperty("user.dir") + "/" + fileName;
+            createFile(filePath, userCode);
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                compiler.run(null, null, null, userCode);
+            compiler.run(null, null, null, filePath);
             
             // Load the compiled class
             Class<?> compiledClass = Class.forName("MyClass");
-
+            Class<?>[] argList = new Class[paramCount];
+            Arrays.fill(argList, int.class);
             // Get the myMethod() method
-            Method method = compiledClass.getMethod("myMethod", int[].class);
+            Method method = compiledClass.getMethod("myMethod", argList);
         
             // Invoke the method using reflection
             Object returnValue = method.invoke(null, (Object) arguments);
             String theirAnswer = String.valueOf(returnValue);
-            
+            System.out.println("ijijijiji"+theirAnswer);
             return theirAnswer;
         } catch (Exception e){
             return "";
+        }
+    }
+
+    public static void createFile(String filePath, String content) {
+        try {
+            File file = new File(filePath);
+
+            // Create the file if it doesn't exist
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            // Write the content to the file
+            java.nio.file.Files.write(file.toPath(), content.getBytes());
+            System.out.println("File created successfully at: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
