@@ -119,7 +119,7 @@ public class QB {
 
                                 int secondLastIndex = question.lastIndexOf("$", index-1);
                                 String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
-                                
+
                                 int params[] = new int[paramsString.length];
                                 for (int i = 0; i < paramsString.length; i++){
                                     params[i] = Integer.parseInt(paramsString[i]);
@@ -203,41 +203,24 @@ public class QB {
     }
 
     public static String javaTester(String userCode, int... arguments) throws Exception {
-        // Create an in-memory Java file
-        String className = "MyClass";
-        String fileName = className + ".java";
-        String filePath = System.getProperty("user.dir") + "/" + fileName;
-        createFile(filePath, userCode); // Assume FileManager is a utility class to create files
-        
-        // Compile the Java file
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        compiler.run(null, null, null, filePath);
-        
-        // Load the compiled class
-        Class<?> compiledClass = Class.forName(className);
-    
-        // Invoke the method using reflection
-        Method method = compiledClass.getMethod("myMethod", int[].class);
-        Object returnValue = method.invoke(null, (Object) arguments);
-        String theirAnswer = String.valueOf(returnValue);
-        
-        return theirAnswer;
-    }   
+        try{
+            // Compile the Java file
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+                compiler.run(null, null, null, userCode);
+            
+            // Load the compiled class
+            Class<?> compiledClass = Class.forName("MyClass");
 
-    public static void createFile(String filePath, String content) {
-        try {
-            File file = new File(filePath);
-
-            // Create the file if it doesn't exist
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
-            // Write the content to the file
-            java.nio.file.Files.write(file.toPath(), content.getBytes());
-            System.out.println("File created successfully at: " + filePath);
-        } catch (IOException e) {
-            e.printStackTrace();
+            // Get the myMethod() method
+            Method method = compiledClass.getMethod("myMethod", int[].class);
+        
+            // Invoke the method using reflection
+            Object returnValue = method.invoke(null, (Object) arguments);
+            String theirAnswer = String.valueOf(returnValue);
+            
+            return theirAnswer;
+        } catch (Exception e){
+            return "";
         }
     }
 
