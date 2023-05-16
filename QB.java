@@ -10,6 +10,7 @@ public class QB {
     public static int port;
     public static String serverType;
     public static String locationOfQuestionFiles = "./Questions/";
+    public static int counter = 0; // Counter for javaTester() function
 
     public static void main(String[] args) throws Exception {
         if (args[0].equals("-p")){
@@ -135,24 +136,22 @@ public class QB {
                                     // actualAns = pythonTester(correctAns,id, params);
                                 }
                                 else{
-                                    // javaTester returns "" when there is an error -> when user answer is syntactically incorrect
-                                    // File file = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
-                                    // file.delete();
-                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.java");
-                                    // file.delete();
                                     userAns = javaTester(ans,params.length, params);
-                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
-                                    // file.delete();
-                                    // file = new File(System.getProperty("user.dir") + "/" + "MyClass.java");
-                                    // file.delete();
+                                    if (userAns.equals("")){
+                                        writer.println("wrong");
+                                        writer.flush();
+                                        break;
+                                    }
                                     actualAns = javaTester(correctAns,params.length,params);
                                 }
+
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
+
                                 if (userAns.equals(actualAns)){
                                     writer.println("correct");
                                 }
-                                else if(userAns.equals("") || !userAns.equals(actualAns)){
+                                else {
                                     writer.println("wrong");
                                 }
                                 writer.flush();
@@ -212,34 +211,40 @@ public class QB {
     }
 
     public static String javaTester(String userCode,int paramCount, Object... arguments) throws Exception {
-            try{
-                // Compile the Java file
-                String fileName = "MyClass.java";
-                String filePath = System.getProperty("user.dir") + "/" + fileName;
-                createFile(filePath, userCode);
-                JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                compiler.run(null, null, null, filePath);
-                System.out.println("here");
-                // Load the compiled class
-                Class<?> compiledClass = Class.forName("MyClass");
-                Class<?>[] argList = new Class[paramCount];
-                Arrays.fill(argList, int.class);
-                // Get the myMethod() method
-                Method method = compiledClass.getMethod("myMethod", argList);
-                System.out.println("here2");
-                // Invoke the method using reflection
-                Object returnValue = method.invoke(null, arguments);
-                System.out.println("ijijijiji");
-                String theirAnswer = String.valueOf(returnValue);
-                System.out.println("THIS SHOULDNT BE PRINTED TWICE");
-                System.out.println(userCode);
-                
-                return theirAnswer;
-            }catch(Exception e){
-                
-                return "INVALID BITCH0";
-            }
-        
+        try{
+            // Create a unique class name to prevent past executions from being reused
+            String myClassDeclaration = String.format("public class MyClass%d {%s}", counter, userCode);
+
+            // Compile the Java file
+            String fileName = "MyClass" + counter + ".java";
+            String filePath = "./" + fileName;
+            createFile(filePath, myClassDeclaration);
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            compiler.run(null, null, null, filePath);
+
+            // Load the compiled class
+            Class<?> compiledClass = Class.forName(String.format("MyClass%d", counter));
+            Class<?>[] argList = new Class[paramCount];
+            Arrays.fill(argList, int.class);
+
+            // Get the myMethod() method
+            Method method = compiledClass.getMethod("myMethod", argList);
+
+            // Invoke the method using reflection
+            Object returnValue = method.invoke(null, arguments);
+            String theirAnswer = String.valueOf(returnValue);
+
+            File file = new File(filePath);
+            file.delete();
+            File file2 = new File(String.format("./MyClass%d.class", counter));
+            file2.delete();
+
+            counter++;
+
+            return theirAnswer;
+        }catch(Exception e){
+            return "";
+        }
     }
 
     public static void createFile(String filePath, String content) {
@@ -247,24 +252,12 @@ public class QB {
             File file = new File(filePath);
 
             // Create the file if it doesn't exist
-            if (file.exists()) {
-                file.delete();
+            if (!file.exists()) {
                 file.createNewFile();
-                System.out.println("File deleted at: " + filePath);
-            }
-            else{
-                file.createNewFile();
-            }
-            File file2 = new File(System.getProperty("user.dir") + "/" + "MyClass.class");
-
-            if (file2.exists()){
-                file2.delete();
-                System.out.println("File deleted");
             }
 
             // Write the content to the file
             java.nio.file.Files.write(file.toPath(), content.getBytes());
-            System.out.println("File created successfully at: " + filePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
