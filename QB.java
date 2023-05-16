@@ -136,6 +136,7 @@ public class QB {
                                     actualAns = pythonTester(correctAns,id, params);
                                 }
                                 else{
+                                    // javaTester returns "" when there is an error -> when user answer is syntactically incorrect
                                     userAns = javaTester(ans, params);
                                     actualAns = javaTester(correctAns, params);
                                 }
@@ -143,7 +144,7 @@ public class QB {
                                 if (userAns.equals(actualAns)){
                                     writer.println("correct");
                                 }
-                                else{
+                                else if(userAns.equals("") || !userAns.equals(actualAns)){
                                     writer.println("wrong");
                                 }
                                 writer.flush();
@@ -198,7 +199,7 @@ public class QB {
             p.waitFor();
             return output;
         } catch (IOException | InterruptedException e) {
-            return "";
+            return ""; // Returns empty string if there is an error
         }
     }
 
