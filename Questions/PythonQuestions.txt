@@ -10,6 +10,6 @@ MC$What type of value is "2.01" in python?$float/integer/String/double$String
 MC$Which of the following is a set?$["a","b","c"]/{"first" : "a", "second": "b", "third" : "b"}/{"a", "b", "c"}/("a", "b", "c")${"a", "b", "c"}
 MC$What is the result of "1" * 2 + 3$23/5/113/TypeError$TypeError
 MC$Which of these will NOT print hello world in python 3.8, given that x = "hello"?$print(x + " world")/print(f'{x} world')/print(str("x") + " world")/print('%s world'%(x))$print(str("x") + " world")
-SA$Write a Python program to calculate the sum of two numbers entered by the user.$2,2$def myMethod(a,b):\n\treturn a+b
-SA$Write a Python program to find the maximum of two numbers entered by the user.$2,3$def myMethod(a, b):\n\treturn max(a, b)
-SA$Write a Python program to check if a number entered by the user is even. Return True or False.$6$def myMethod(a):\n\treturn a%2 == 0
+SA$Write a method to calculate the sum of two numbers entered by the user.$2,2$def myMethod(a,b):\n\treturn a+b
+SA$Write a method to find the maximum of two numbers entered by the user.$2,3$def myMethod(a, b):\n\treturn max(a, b)
+SA$Write a method to check if a number entered by the user is even. Return True or False.$6$def myMethod(a):\n\treturn a%2 == 0
