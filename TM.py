@@ -7,6 +7,8 @@ import random
 import ast
 import json
 
+# TODO: Remove --n when user get 3 attempts wrong
+
 
 ############################################################################################
 # Functions relating to requesting, receiving, manipulating, and keeping track of questions
@@ -551,7 +553,7 @@ if __name__ == '__main__':
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
 
-    HOST = socket.gethostbyname(socket.gethostname()) # IP for device running Java QB and running Python QB
+    HOST = socket.gethostbyname_ex(socket.gethostname())[-1][1] # IP for device running Java QB and running Python QB
     print(HOST) # Print the IP address of the device running the server
 
     # Set the ports
