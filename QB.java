@@ -116,11 +116,8 @@ public class QB {
 
                                 index = question.lastIndexOf("$");
                                 correctAns = question.substring(index+1);
-                                System.out.println(ans + "ASDIUASD");
-                                System.out.println(correctAns + "AHHHHHHHHHHHH");
 
                                 int secondLastIndex = question.lastIndexOf("$", index-1);
-                                System.out.println(question.substring(secondLastIndex+1, index) + "ADHOASHUIDHAISHDIUABSDUIBIUA");
                                 String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
 
                                 Object params[] = new Object[paramsString.length];
@@ -130,23 +127,27 @@ public class QB {
 
                                 // replaces the --n with new line characters 
                                 ans = ans.replace("--n", "\n");
-                                System.out.println(ans +"LLLLLLLLL");
+                                ans = ans.replace("\\n", "\n");
+                                ans = ans.replace("\\t", "\t");
+                                correctAns = correctAns.replace("--n", "\n");
+                                correctAns = correctAns.replace("\\n", "\n");
+                                correctAns = correctAns.replace("\\t", "\t");
+
                                 String userAns = "";
                                 String actualAns = "";
-                                // String ans= "def myMethod(a,b):\n\treturn a+b";
                                 if (serverType == "Python"){ 
                                     userAns = pythonTester(ans,params);
                                     actualAns = pythonTester(correctAns, params);
                                 }
-                                // else{
-                                //     userAns = javaTester(ans,params.length, params);
-                                //     if (userAns.equals("")){
-                                //         writer.println("wrong");
-                                //         writer.flush();
-                                //         break;
-                                //     }
-                                //     actualAns = javaTester(correctAns,params.length,params);
-                                // }
+                                else{
+                                    userAns = javaTester(ans,params.length, params);
+                                    if (userAns.equals("")){
+                                        writer.println("wrong");
+                                        writer.flush();
+                                        break;
+                                    }
+                                    actualAns = javaTester(correctAns,params.length,params);
+                                }
 
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
