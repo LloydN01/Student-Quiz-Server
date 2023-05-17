@@ -136,7 +136,7 @@ public class QB {
                                 String userAns = "";
                                 String actualAns = "";
                                 if (serverType == "Python"){ 
-                                    userAns = pythonTester(ans,params);
+                                    userAns = pythonTester(ans, params);
                                     actualAns = pythonTester(correctAns, params);
                                 }
                                 else{
@@ -148,7 +148,11 @@ public class QB {
                                     }
                                     actualAns = javaTester(correctAns,params.length,params);
                                 }
-
+                                System.out.println(String.format("hehrehrerehre %d",counter));
+                                File file = new File(String.format("./MyClass%d.java", counter));
+                                file.delete();
+                                File file2 = new File(String.format("./MyClass%d.class", counter));
+                                file2.delete();
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
 
