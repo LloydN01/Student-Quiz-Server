@@ -7,7 +7,6 @@ import random
 import ast
 import json
 
-# TODO: Remove --n when user get 3 attempts wrong
 # TODO: When user gets last quetion wrong 3 times -> currently it doesnt show correct answer but jumps straight to the final page (fix)
 
 ############################################################################################
@@ -266,8 +265,8 @@ def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
 # Creates the HTML that displays the incorrect answer given by user and correct answer provided by QB
 def compareAnswersHTML(answer, correctAnswer):
     # After the third incorrect attempt, the incorrect answer given by user and correct answer provided by QB are displayed side by side
-    content  = "<div><p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Your Answer: <br>{}</p>".format(answer)
-    content += "<p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Correct Answer: <br>{}</p></div>".format(correctAnswer)
+    content  = "<div><p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Your Answer: <br>{}</p>".format(answer.replace("\n", "<br>").replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;').replace(' ', '&nbsp;'))
+    content += "<p style='display: inline-block; width: 50%; margin: 0; padding: 0;'>Correct Answer: <br>{}</p></div>".format(correctAnswer.replace("\\n", "<br>").replace('\\t', '&nbsp;&nbsp;&nbsp;&nbsp;').replace(' ', '&nbsp;'))
 
     return content
 
@@ -497,7 +496,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     correctAnswer =  Marking_requestAndReceiveFromQB(isJavaQB, requestForAns)
 
                     # Dislay the incorrect answer and correct answer side by side
-                    additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
+                    additionalContent = compareAnswersHTML(userAnswer.replace("--n", "\r\n"), correctAnswer)
 
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
 
@@ -553,7 +552,7 @@ if __name__ == '__main__':
 
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
-    HOST = socket.gethostbyname_ex(socket.gethostname())[-1][1] # IP for device running Java QB and running Python QB
+    HOST = socket.gethostbyname_ex(socket.gethostname())[-1][-1] # IP for device running Java QB and running Python QB
     print(HOST) # Print the IP address of the device running the server
 
     # Set the ports

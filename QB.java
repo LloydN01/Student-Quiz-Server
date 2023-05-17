@@ -46,10 +46,8 @@ public class QB {
                 // Read from client
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
                 if (receivedString.equals("PING")){
-                    // System.out.println("Received PING");
                     writer.println("PONG");
                     writer.flush();
-                    // System.out.println("Sending PONG");
                 }
                 else{
                     String flag = receivedString.substring(0, 5); //get the flag
@@ -152,14 +150,10 @@ public class QB {
                                     File actualFile2 = new File(String.format("./MyClass%d.class", counter));
                                     actualFile2.delete();
                                 }
-                                System.out.println(String.format("hehrehrerehre %d",counter));
                                 File file = new File(String.format("./MyClass%d.java", counter));
                                 file.delete();
                                 File file2 = new File(String.format("./MyClass%d.class", counter));
                                 file2.delete();
-                                
-                                System.out.println("UserAns" + userAns);
-                                System.out.println("ActualAns" + actualAns);
 
                                 if (userAns.equals(actualAns)){
                                     writer.println("correct");
@@ -215,9 +209,7 @@ public class QB {
             p.getOutputStream().write(code.getBytes());
             p.getOutputStream().close();
             String output = out.readLine();
-            System.out.println(output);
             p.waitFor();
-            System.out.println("RETURNED: " + output);
             return output; 
         } catch (Exception e) {
             return "";
