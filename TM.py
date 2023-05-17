@@ -28,36 +28,8 @@ def getQuestionsFromServer(numQuestions):
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
-<<<<<<< HEAD
-    javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
-    pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
-
-    qbs = [javaQB,pythonQB]
-    pqs = []
-    jqs = []
-    r,w,e = select.select(qbs,[],qbs)
-    while qbs: 
-        for host in r: 
-            q = host.recv(1024).decode() 
-            if host is javaQB: 
-                #ADD PARSED QS TO DB 
-                jqs += parse_qs
-                if (len(jqs) == numJavaQuestions): 
-                    qbs.remove(host)
-            elif host is pythonQB: 
-                #ADD PARSED QS TO DB
-                pqs+= parse_qs
-                if (len(pqs) == numPythonQuestions): 
-                    qbs.remove(host)
-        for host in e: 
-            qbs.remove(host)
-           
-                
-
-=======
     java_conn.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
     python_conn.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
->>>>>>> ca4ce99302e1cb8c04d1b9cfb2df6e2b2a0b0eef
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
