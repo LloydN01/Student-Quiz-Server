@@ -135,8 +135,8 @@ public class QB {
                                 String actualAns = "";
                                 // String ans= "def myMethod(a,b):\n\treturn a+b";
                                 if (serverType == "Python"){ 
-                                    // userAns = pythonTester(ans, id, params);
-                                    // actualAns = pythonTester(correctAns,id, params);
+                                    userAns = pythonTester(ans, params);
+                                    actualAns = pythonTester(correctAns, params);
                                 }
                                 // else{
                                 //     userAns = javaTester(ans,params.length, params);
