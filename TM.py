@@ -8,7 +8,7 @@ import ast
 import json
 
 # TODO: Remove --n when user get 3 attempts wrong
-
+# TODO: When user gets last quetion wrong 3 times -> currently it doesnt show correct answer but jumps straight to the final page (fix)
 
 ############################################################################################
 # Functions relating to requesting, receiving, manipulating, and keeping track of questions
@@ -16,9 +16,9 @@ import json
 
 # Randomly choose the number of questions requested to each server
 def randomiseQuestionNumbers():
-    # choose a random number between 0 and 5
-    numFromJava = random.randint(0,5)
-    numFromPython = 5 - numFromJava
+    # choose a random number between 0 and 10
+    numFromJava = random.randint(0,10)
+    numFromPython = 10 - numFromJava
 
     return (numFromJava, numFromPython)
 
@@ -351,7 +351,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             
             listOfQuestions = []
             for receivedData in readable:
-                receivedQuestion = receivedData.recv(2048)
+                receivedQuestion = receivedData.recv(4096) # To receive all questions as a single line
                 if receivedQuestion:
                     listOfQuestions += (receivedQuestion.decode().strip().split("$$")) # Using $$ as a delimiter between questions
             

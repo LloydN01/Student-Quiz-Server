@@ -136,17 +136,17 @@ public class QB {
                                 String userAns = "";
                                 String actualAns = "";
                                 if (serverType == "Python"){ 
-                                    userAns = pythonTester(ans, params);
-                                    actualAns = pythonTester(correctAns, params);
+                                    userAns = pythonTester(ans, params.length, params);
+                                    actualAns = pythonTester(correctAns, params.length, params);
                                 }
                                 else{
-                                    userAns = javaTester(ans,params.length, params);
+                                    userAns = javaTester(ans, params.length, params);
                                     File userFile = new File(String.format("./MyClass%d.java", counter));
                                     userFile.delete();
                                     File userFile2 = new File(String.format("./MyClass%d.class", counter));
                                     userFile2.delete();
 
-                                    actualAns = javaTester(correctAns,params.length,params);
+                                    actualAns = javaTester(correctAns, params.length, params);
                                     File actualFile = new File(String.format("./MyClass%d.java", counter));
                                     actualFile.delete();
                                     File actualFile2 = new File(String.format("./MyClass%d.class", counter));
@@ -157,8 +157,9 @@ public class QB {
                                 file.delete();
                                 File file2 = new File(String.format("./MyClass%d.class", counter));
                                 file2.delete();
-                                System.out.println("UserAns"+userAns);
-                                System.out.println("ActualAns"+actualAns);
+                                
+                                System.out.println("UserAns" + userAns);
+                                System.out.println("ActualAns" + actualAns);
 
                                 if (userAns.equals(actualAns)){
                                     writer.println("correct");
@@ -195,8 +196,11 @@ public class QB {
         serverSocket.close();
     }
 
-    public static String pythonTester(String userCode, Object... parameter){ 
+    public static String pythonTester(String userCode, int paramCount, Object... parameter) throws Exception { 
         try {
+            // Checks if the number of parameters is correct
+            if (!isCorrectNumberOfParameter(userCode, paramCount)){ return ""; }
+
             // // Create a ProcessBuilder object to run the Python interpreter
             ProcessBuilder pb = new ProcessBuilder("python", "-");
             Process p = pb.start();
@@ -215,24 +219,15 @@ public class QB {
             p.waitFor();
             System.out.println("RETURNED: " + output);
             return output; 
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             return "";
         }
     }
 
     public static String javaTester(String userCode,int paramCount, Object... arguments) throws Exception {
         try{
-            // Gets the indexes of the left and right bracket
-            int bracketIndexLeft = userCode.indexOf('(');
-            int bracketIndexRight = userCode.indexOf(')');
-
-            // Gets the parameters from the user's code
-            String params = userCode.substring(bracketIndexLeft+1, bracketIndexRight);
-            int userParamCount = params.split(",").length;
             // Checks if the number of parameters is correct
-            if (userParamCount != paramCount){
-                return "";
-            }   
+            if (!isCorrectNumberOfParameter(userCode, paramCount)){ return ""; }
 
             // Create a unique class name to prevent past executions from being reused
             String myClassDeclaration = String.format("public class MyClass%d {%s}", counter, userCode);
@@ -346,5 +341,17 @@ public class QB {
         return questions;
     }
 
+    // Function that checks if users code has correct number of parameters
+    public static boolean isCorrectNumberOfParameter(String userCode, int paramCount){
+        // Gets the indexes of the left and right bracket
+        int bracketIndexLeft = userCode.indexOf('(');
+        int bracketIndexRight = userCode.indexOf(')');
 
+        // Gets the parameters from the user's code
+        String params = userCode.substring(bracketIndexLeft+1, bracketIndexRight);
+        int userParamCount = params.split(",").length;
+
+        // Checks if the number of parameters is correct
+        return (userParamCount == paramCount);
+    }
 }
