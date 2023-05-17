@@ -116,8 +116,11 @@ public class QB {
 
                                 index = question.lastIndexOf("$");
                                 correctAns = question.substring(index+1);
+                                System.out.println(ans + "ASDIUASD");
+                                System.out.println(correctAns + "AHHHHHHHHHHHH");
 
                                 int secondLastIndex = question.lastIndexOf("$", index-1);
+                                System.out.println(question.substring(secondLastIndex+1, index) + "ADHOASHUIDHAISHDIUABSDUIBIUA");
                                 String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
 
                                 Object params[] = new Object[paramsString.length];
@@ -127,23 +130,23 @@ public class QB {
 
                                 // replaces the --n with new line characters 
                                 ans = ans.replace("--n", "\n");
-
-                                String userAns = "1";
-                                String actualAns = "1";
-
+                                System.out.println(ans +"LLLLLLLLL");
+                                String userAns = "";
+                                String actualAns = "";
+                                // String ans= "def myMethod(a,b):\n\treturn a+b";
                                 if (serverType == "Python"){ 
-                                    // userAns = pythonTester(ans, id, params);
-                                    // actualAns = pythonTester(correctAns,id, params);
+                                    userAns = pythonTester(ans,params);
+                                    actualAns = pythonTester(correctAns, params);
                                 }
-                                else{
-                                    userAns = javaTester(ans,params.length, params);
-                                    if (userAns.equals("")){
-                                        writer.println("wrong");
-                                        writer.flush();
-                                        break;
-                                    }
-                                    actualAns = javaTester(correctAns,params.length,params);
-                                }
+                                // else{
+                                //     userAns = javaTester(ans,params.length, params);
+                                //     if (userAns.equals("")){
+                                //         writer.println("wrong");
+                                //         writer.flush();
+                                //         break;
+                                //     }
+                                //     actualAns = javaTester(correctAns,params.length,params);
+                                // }
 
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
@@ -183,30 +186,28 @@ public class QB {
         serverSocket.close();
     }
 
-    public static String pythonTester(String userCode, int question, int[] parameter){ 
+    public static String pythonTester(String userCode, Object... parameter){ 
         try {
             // // Create a ProcessBuilder object to run the Python interpreter
             ProcessBuilder pb = new ProcessBuilder("python", "-");
             Process p = pb.start();
-            int Q_ID = question;
-            String params = "";
-            for(int x: parameter){
-                params += Integer.toString(x) + ",";
-            }
-            params = params.substring(0, params.length());
-            System.out.print(params);
-
             BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3))";
-            String code = userCode + "\nprint(func" + Q_ID + "(" + params + "))";
+            // code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
+            String params = "";
+            for(Object x: parameter){
+                params += String.valueOf(x) + ",";
+            }
+            String code = userCode+ "\nprint(myMethod("+params+"))";
+            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3,2))";
             p.getOutputStream().write(code.getBytes());
             p.getOutputStream().close();
             String output = out.readLine();
             System.out.println(output);
             p.waitFor();
-            return output;
+            System.out.println("RETURNED: " + output);
+            return output; 
         } catch (IOException | InterruptedException e) {
-            return ""; // Returns empty string if there is an error
+            return "";
         }
     }
 
