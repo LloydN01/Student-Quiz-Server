@@ -7,8 +7,6 @@ import random
 import ast
 import json
 
-# TODO: When user gets last quetion wrong 3 times -> currently it doesnt show correct answer but jumps straight to the final page (fix)
-
 ############################################################################################
 # Functions relating to requesting, receiving, manipulating, and keeping track of questions
 ############################################################################################
@@ -335,6 +333,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/" or "logout" in data:
             # Request the login page when the user first connects to the server or when the user clicks the logout button
             HTMLContent = login_page()
+        elif "get-final-mark" in data:
+            # Request the final page when the user has completed the test
+            HTMLContent = finalPageHTML(username)
         elif 'get-questions' in data:
             # 'get-questions' is the name of the submit button in the index page. Users will only get access to this page if they are new and have not previously attempted the test
             # First time logging in, request the questions from the servers
@@ -498,11 +499,21 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # Dislay the incorrect answer and correct answer side by side
                     additionalContent = compareAnswersHTML(userAnswer.replace("--n", "\r\n"), correctAnswer)
 
-                HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
+                HTMLContent = generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent) # After submitting their answer, the page should stay on the same question
 
                 if isTestComplete(username):
-                    # If the test is completed -> Show user the final page
-                    HTMLContent = finalPageHTML(username)
+                    # If the test is completed
+                    if receivedMark == "correct":
+                        # User got the final mark correct
+                        HTMLContent = finalPageHTML(username)
+                    else:
+                        # User got the final mark incorrect -> Provide them the opportunity to see the correct answer first before displaying the button to go to the final page
+                        additionalContent += "<p><b>Test Completed!</b> Please press the below button to see your final mark</p><br><form method='get'>"
+                        additionalContent += "<input type='submit' name='get-final-mark' value='Get Final Mark'>"
+                        additionalContent += "<input type='hidden' id='username' name='username' value='{}'>".format(username)
+                        additionalContent += "</form>"
+                        # All the other buttons except for the "Get Final Mark" button in the page should be hidden to promote user to click the "Get Final Mark" button
+                        HTMLContent = generateQuestionsHTML(userQuestions[currQuestionNum], username).replace("submit", "hidden") + additionalContent
             else:
                 # If "answer" is not in data, then the user has not submitted an answer and just pressed submit
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
