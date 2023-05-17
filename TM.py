@@ -247,7 +247,8 @@ def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
         content += multipleChoice(index, questionBody, options, username, questionLang + questionNum)
     elif questionType == "SA":
         # If question is short answer
-        questionBody = question
+        questionBody = "Create a " + questionLang + " function called myMethod taking the necessary number of parameters and providing the appropriate functionality:<br>"
+        questionBody += question
         content += shortAnswer(index, questionBody, username, questionLang + questionNum)
 
     # Back and next buttons
@@ -552,7 +553,6 @@ if __name__ == '__main__':
 
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
-
     HOST = socket.gethostbyname_ex(socket.gethostname())[-1][1] # IP for device running Java QB and running Python QB
     print(HOST) # Print the IP address of the device running the server
 
