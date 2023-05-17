@@ -137,14 +137,18 @@ public class QB {
                                 }
                                 else{
                                     userAns = javaTester(ans,params.length, params);
-                                    if (userAns.equals("")){
-                                        writer.println("wrong");
-                                        writer.flush();
-                                        break;
-                                    }
+                                    // if (userAns.equals("")){
+                                    //     writer.println("wrong");
+                                    //     writer.flush();
+                                    //     break;
+                                    // }
                                     actualAns = javaTester(correctAns,params.length,params);
                                 }
-
+                                System.out.println(String.format("hehrehrerehre %d",counter));
+                                File file = new File(String.format("./MyClass%d.java", counter));
+                                file.delete();
+                                File file2 = new File(String.format("./MyClass%d.class", counter));
+                                file2.delete();
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
 
