@@ -127,13 +127,17 @@ public class QB {
 
                                 // replaces the --n with new line characters 
                                 ans = ans.replace("--n", "\n");
+                                ans = ans.replace("\\n", "\n");
+                                ans = ans.replace("\\t", "\t");
+                                correctAns = correctAns.replace("--n", "\n");
+                                correctAns = correctAns.replace("\\n", "\n");
+                                correctAns = correctAns.replace("\\t", "\t");
 
-                                String userAns = "1";
-                                String actualAns = "1";
-
+                                String userAns = "";
+                                String actualAns = "";
                                 if (serverType == "Python"){ 
-                                    // userAns = pythonTester(ans, id, params);
-                                    // actualAns = pythonTester(correctAns,id, params);
+                                    userAns = pythonTester(ans, params);
+                                    actualAns = pythonTester(correctAns, params);
                                 }
                                 else{
                                     userAns = javaTester(ans,params.length, params);
@@ -148,7 +152,11 @@ public class QB {
                                     File actualFile2 = new File(String.format("./MyClass%d.class", counter));
                                     actualFile2.delete();
                                 }
-
+                                System.out.println(String.format("hehrehrerehre %d",counter));
+                                File file = new File(String.format("./MyClass%d.java", counter));
+                                file.delete();
+                                File file2 = new File(String.format("./MyClass%d.class", counter));
+                                file2.delete();
                                 System.out.println("UserAns"+userAns);
                                 System.out.println("ActualAns"+actualAns);
 
@@ -187,30 +195,28 @@ public class QB {
         serverSocket.close();
     }
 
-    public static String pythonTester(String userCode, int question, int[] parameter){ 
+    public static String pythonTester(String userCode, Object... parameter){ 
         try {
             // // Create a ProcessBuilder object to run the Python interpreter
             ProcessBuilder pb = new ProcessBuilder("python", "-");
             Process p = pb.start();
-            int Q_ID = question;
-            String params = "";
-            for(int x: parameter){
-                params += Integer.toString(x) + ",";
-            }
-            params = params.substring(0, params.length());
-            System.out.print(params);
-
             BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3))";
-            String code = userCode + "\nprint(func" + Q_ID + "(" + params + "))";
+            // code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
+            String params = "";
+            for(Object x: parameter){
+                params += String.valueOf(x) + ",";
+            }
+            String code = userCode+ "\nprint(myMethod("+params+"))";
+            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3,2))";
             p.getOutputStream().write(code.getBytes());
             p.getOutputStream().close();
             String output = out.readLine();
             System.out.println(output);
             p.waitFor();
-            return output;
+            System.out.println("RETURNED: " + output);
+            return output; 
         } catch (IOException | InterruptedException e) {
-            return ""; // Returns empty string if there is an error
+            return "";
         }
     }
 
