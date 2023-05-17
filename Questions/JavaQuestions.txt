@@ -6,6 +6,9 @@ MC$How would you utilise this class to grab its "number" value?<br>public class 
 MC$Which of the following is not a primitive data type in java?$int/float/double/string$string
 MC$What is the output of this:<br>static int plusMethod(int x, int y) {<br>  return x + y;<br>}<br>static double plusMethod(double x, double y) {<br>  return x + y;<br>}<br>public static void main(String[] args) {<br>  int myNum1 = plusMethod(8, 5);<br>  double myNum1 = plusMethod(4.3, 6.26);<br>  return myNum2<br>}$13/10.56/compile error/0$compile error
 MC$Which of the following is not a valid way to declare and initialize an array in Java?$int[] arr = {1, 2, 3};/int arr[] = {1, 2, 3};/int arr[3] = {1, 2, 3};/All of the above are valid.$int arr[3] = {1, 2, 3};
-SA$Write a Java program to calculate the sum of two numbers entered by the user
-SA$Write a Java program to find the maximum of two numbers entered by the user.
-SA$Write a Java program to check if a number entered by the user is even or odd.
+MC$What is the way to print "hello world" in java?$console.log("hello world");/System.out.println("hello world");/print("hello world")/printf("hello world");$System.out.println("hello world");
+MC$How do you find the length of a string variable s?$s.length();/s.length;/s.size();/s.size;$s.length();
+MC$What would be the result of printing (1 + 2 + "3" + 4)$1234/334/Error/10$334
+SA$Write a Java program to calculate the sum of two numbers entered by the user.$2,3$public static int myMethod(int num1, int num2) {return num1 + num2;}
+SA$Write a Java program to check if a number entered by the user is even. Return True or False.$7$public static boolean myMethod(int number) {return number % 2 == 0;}
+SA$Write a Java program to input a number, add two to it and square it.$3$public static int myMethod(int number) {int result = number + 2;result = result * result;return result;}

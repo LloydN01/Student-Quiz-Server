@@ -1,11 +1,13 @@
 import socket
 import select
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler # TODO: Maybe we dont need threads. We could just use HTTPServer
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
 import ast
 import json
+
+# TODO: Remove --n when user get 3 attempts wrong
 
 
 ############################################################################################
@@ -26,8 +28,8 @@ def getQuestionsFromServer(numQuestions):
     numJavaQuestions, numPythonQuestions = numQuestions
 
     # Send the number of questions to each server -> "$REQ$<numQuestions>\n is the format"
-    javaQB.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
-    pythonQB.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
+    java_conn.sendall(bytes("$REQ$"+str(numJavaQuestions) + "\n", "utf-8"))
+    python_conn.sendall(bytes("$REQ$"+str(numPythonQuestions) + "\n", "utf-8"))
 
     print("Asked for", numJavaQuestions, "questions to Java server")
     print("Asked for", numPythonQuestions, "questions to Python server")
@@ -47,13 +49,23 @@ def isQuestionComplete(username, questionNumber):
         return True
     else:
         return False
+
+# Checks if the user's test is complete
+def isTestComplete(username):
+    userQuestions = questionsDict[username]["questions"]
+    for questionNum in range(len(userQuestions)):
+        if not isQuestionComplete(username, questionNum):
+            # If even one question is incompete -> test it not complete
+            return False
+    questionsDict[username]["completed"] = True
+    return True
     
 # USED FOR MARKING STAGE: Sends the request of marking/answer to QB and receives the response from QB
 def Marking_requestAndReceiveFromQB(isJavaQB, request):
     if isJavaQB:
-        javaQB.sendall(bytes(request, "utf-8"))
+        java_conn.sendall(bytes(request, "utf-8"))
     else:
-        pythonQB.sendall(bytes(request, "utf-8"))
+        python_conn.sendall(bytes(request, "utf-8"))
 
     # If user attempt num <= 3 -> request for marking and receive either "correct" or "wrong" from QB
     # If user attempt num == 3 and user answer is wrong -> request for the correct answer from QB
@@ -63,10 +75,33 @@ def Marking_requestAndReceiveFromQB(isJavaQB, request):
 
     return received
 
+# Checks if TM and QBs are still connected by sending a PING and recieving a PONG
+def PingPong():
+    try:
+        java_conn.sendall(bytes("PING\n","utf-8"))
+        python_conn.sendall(bytes("PING\n","utf-8"))
+    except:
+        print("QB cannot receive")
+        return 0
+    print('sending PING')
+    data1,data2 = java_conn.recv(1024),python_conn.recv(1024)
+    if not data1 or not data2:
+        print("QB cannot send")
+        return 0
+    return 1
+
 
 ############################################################################################
 # Functions that generates the HTML for the pages
 ############################################################################################
+
+# HTML page that notifies users when QB disconnects from the TM
+def disconnectedQBHTML():
+  content = ""
+  content += "<h1>QB has been disconnected: TEST PAUSED</h1>"
+  content += "<p>Your progress has been automatically saved."
+  content += "<br>Please try reconnecting at a later time.</p>"
+  return content
 
 # Function that creates Javascript that enables the use of tab for indentations
 def enableTabPresses():
@@ -235,6 +270,19 @@ def compareAnswersHTML(answer, correctAnswer):
 
     return content
 
+# Creates the final page for the user -> They see it once they complete the test
+def finalPageHTML(username):
+    content = "<h1>Good Work {}!<br>You have completed the test</h1>".format(username)
+
+    for (num, mark) in enumerate(questionsDict[username]["marks"]):
+        content += "Q{}: {} mark(s)<br>".format(num + 1, mark)
+    content += "Final Mark: {:.2f}%".format((sum(questionsDict[username]["marks"]) /
+                                         (len(questionsDict[username]["marks"]) * 3) *
+                                            100))
+    content += "<form method='get'>"
+    content += "<input type='submit' name='logout' value='Logout'>"
+    content += "</form>"
+    return content
 
 ############################################################################################
 # HTTP Request Handler Class that handles all the requests made by the client
@@ -270,6 +318,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # when the user clicks the logout button or when the user clicks the back/next button
     ##########################################################################
     def do_GET(self):
+        # Checks if TM is still connected to both QBs -> If not, let user know
+        res = PingPong()
+        if res == 0:
+            self._set_response(disconnectedQBHTML())
+            return 0
+
         # Obtain the key-value pairs from the query string
         get_data = urlparse(self.path).query
         data = parse_qs(get_data)
@@ -375,6 +429,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     # or submits their username and password to login
     ##########################################################################
     def do_POST(self):
+        # Checks if TM is still connected to QBs -> If not, notify user
+        res = PingPong()
+        if res == 0:
+            self._set_response(disconnectedQBHTML())
+            return 0
+
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         data = parse_qs(post_data)
@@ -404,6 +464,9 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
                 questionKey = str(data["questionKey"][0])
                 userAnswer = str(data["answer"][0])
+
+                # replaces the new line character with --n to avoid the java client from not receiving our full message
+                userAnswer = userAnswer.replace("\r\n","--n")
 
                 isJavaQB = False # Either true if sending to JavaQB or false if sending to PythonQB
                 id = ""
@@ -436,6 +499,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     additionalContent = compareAnswersHTML(userAnswer, correctAnswer)
 
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username, additionalContent)) # After submitting their answer, the page should stay on the same question
+
+                if isTestComplete(username):
+                    # If the test is completed -> Show user the final page
+                    HTMLContent = finalPageHTML(username)
             else:
                 # If "answer" is not in data, then the user has not submitted an answer and just pressed submit
                 HTMLContent = (generateQuestionsHTML(userQuestions[currQuestionNum], username)) # After submitting their answer, the page should stay on the same question
@@ -448,7 +515,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                     # These users have not received their questions yet
                     print("New user {} has been added".format(username))
                     content = index_page(username)
-                    HTMLContent = (content)
+                    HTMLContent = content
+                elif questionsDict[username]["completed"]:
+                    # If user has completed the test already -> return the test completed page
+                    HTMLContent = finalPageHTML(username)
                 else:
                     # If user has received their questions already, redirect them to the questions page where they last left off
                     currQuestionNum = questionsDict[username]["questionNum"] # The question number that the user is currently on
@@ -483,20 +553,8 @@ if __name__ == '__main__':
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
 
-    HOST1 = "" # IP for device running Java QB
-    HOST2 = "" # IP for device running Python QB
-
-    # Get the host from the command line
-    if len(argv) == 3:
-        HOST1 = str(argv[1])
-        HOST2 = str(argv[2])
-        print("Connected to two different QBs on different machines")
-    elif len(argv) == 2:
-        HOST1 = HOST2 = str(argv[1])
-        print("Connected to two dfferent QBs running on same machine")
-    else:
-        print("Need at least one IP for QB")
-        quit()
+    HOST = socket.gethostbyname_ex(socket.gethostname())[-1][1] # IP for device running Java QB and running Python QB
+    print(HOST) # Print the IP address of the device running the server
 
     # Set the ports
     JAVA_PORT = 9999
@@ -506,20 +564,30 @@ if __name__ == '__main__':
     javaQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Connect to the servers
-    javaQB.connect((HOST1, JAVA_PORT))
-    pythonQB.connect((HOST2, PYTHON_PORT))
+    # Makes the servers
+    javaQB.bind((HOST,JAVA_PORT))
+    pythonQB.bind((HOST,PYTHON_PORT))
 
-    # Check that both servers are connected
-    if javaQB.fileno() != -1 and pythonQB.fileno() != -1:
-        print("Connected to both servers")
+    # Listen for a QB to connect to each socket
+    javaQB.listen(1)
+    pythonQB.listen(1)
 
+    # Wait for a client to connect to each socket
+    java_conn, java_addr = javaQB.accept()
+    python_conn, python_addr = pythonQB.accept()
+
+    # Print the address of each client
+    print(f"Java client connected from {java_addr[0]}")
+    print(f"Python client connected from {python_addr[0]}")
+    
+
+    # TODO: Probably don't need to set the sockets to non-blocking
     # Set the sockets to non-blocking
     javaQB.setblocking(False)
     pythonQB.setblocking(False)
 
     # Add the sockets to the inputs list
-    inputs = [javaQB, pythonQB]
+    inputs = [java_conn, python_conn]
     outputs = []
 
     port = 5000

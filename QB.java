@@ -1,7 +1,6 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.util.ArrayList;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -11,8 +10,9 @@ public class QB {
     public static int port;
     public static String serverType;
     public static String locationOfQuestionFiles = "./Questions/";
+    public static int counter = 0; // Counter for javaTester() function
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         if (args[0].equals("-p")){
             port = 9998;
             serverType = "Python";
@@ -21,14 +21,15 @@ public class QB {
             port = 9999;
             serverType = "Java";
         }
+        String ip_address = args[1];
 
         ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
 
-        ServerSocket serverSocket = null;
+        Socket serverSocket = null;
         boolean listening = true;
 
         try {
-            serverSocket = new ServerSocket(port); // set port number
+            serverSocket = new Socket(ip_address,port); // set port number
             // Print Server Port Number
             System.out.println(serverType + " Server is listening on port " + port);
         } catch (IOException e) {
@@ -37,110 +38,153 @@ public class QB {
         }
 
         while (listening) {
-            // wait for client connection
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
-
             Scanner scanner = new Scanner(System.in);
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(serverSocket.getOutputStream(), true);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 
-            while(clientSocket.isConnected()){
+            while(serverSocket.isConnected()){
                 // Read from client
-                // TODO redo this shit (SUNNY JOB)
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
-
-                String flag = receivedString.substring(0, 5); //get the flag
-                receivedString = receivedString.substring(5); //remove the flag from the string
-
-                //Variables
-                String[] splittedStrings;
-                int id;
-                String ans;
-                String question;
-                int index;
-                String correctAns;
-
-                switch (flag){
-                        //Requesting Questions
-                        //Format is n - where n is the number of questions requested
-
-                        case "$REQ$":
-                            int numQuestions = Integer.parseInt(receivedString);
-                            System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
-
-                            // Generate random questions
-                            String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
-                            
-                            // Send custom message to client
-                            String questions = concatenateQuestions(randomQuestions);
-                            writer.println(questions);
-                            writer.flush();
-                            System.out.println("Questions sent to TM");
-                            break;
-                        //Marking a multiple choice question
-                        //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
-                        case "$MCQ$":
-                            
-                            splittedStrings = receivedString.split("\\$");
-                            //get the id of the question
-                            id = Integer.parseInt(splittedStrings[0]);
-                            //get the answer of the user
-                            ans = splittedStrings[1];
-                            //get the actual question
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            if (ans.equals(correctAns)){
-                                writer.println("correct");
-                            }
-                            else{
-                                writer.println("wrong");
-                            }
-                            writer.flush();
-                            break;
-                        case "$SAQ$":
-                            splittedStrings = receivedString.split("\\$");
-                            //get the id of the question
-                            id = Integer.parseInt(splittedStrings[0]);
-                            //get the answer of the user
-                            ans = splittedStrings[1];
-                            String userAns;
-                            
-                            if (serverType == "Python"){ 
-                                userAns = pythonTester(ans);
-                            }
-                            else{
-                                userAns = javaTester(ans);
-                            }
-
-                            //get the actual question
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            if (userAns.equals(correctAns)){
-                                writer.println("correct");
-                            }
-                            else{
-                                writer.println("wrong");
-                            }
-                            writer.flush();
-                            break;
-                        case "$ANS$":
-                            id = Integer.parseInt(receivedString);
-                            question = readQuestions.get(id);
-                            index = question.lastIndexOf("$");
-                            correctAns = question.substring(index+1);
-                            writer.println(correctAns);
-                            writer.flush(); 
-                            break;
+                if (receivedString.equals("PING")){
+                    // System.out.println("Received PING");
+                    writer.println("PONG");
+                    writer.flush();
+                    // System.out.println("Sending PONG");
                 }
+                else{
+                    String flag = receivedString.substring(0, 5); //get the flag
+                    receivedString = receivedString.substring(5); //remove the flag from the string
+    
+                    //Variables
+                    String[] splittedStrings;
+                    int id;
+                    String ans;
+                    String question;
+                    int index;
+                    String correctAns;
+    
+                    switch (flag){
+                            //Requesting Questions
+                            //Format is n - where n is the number of questions requested
+    
+                            case "$REQ$":
+                                int numQuestions = Integer.parseInt(receivedString);
+                                System.out.println("Number of " + serverType + " questions requested: " + numQuestions);
+    
+                                // Generate random questions
+                                String[] randomQuestions = generateRandomQuestions(numQuestions, readQuestions);
+                                
+                                // Send custom message to client
+                                String questions = concatenateQuestions(randomQuestions);
+                                writer.println(questions);
+                                writer.flush();
+                                System.out.println("Questions sent to TM");
+                                break;
+                            case "$MCQ$":
+                                //Marking a multiple choice question
+                                //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
+                                
+                                splittedStrings = receivedString.split("\\$");
+                                //get the id of the question
+                                id = Integer.parseInt(splittedStrings[0]);
+                                //get the answer of the user
+                                ans = splittedStrings[1];
+                                //get the actual question
+                                question = readQuestions.get(id);
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+                                if (ans.equals(correctAns)){
+                                    writer.println("correct");
+                                }
+                                else{
+                                    writer.println("wrong");
+                                }
+                                writer.flush();
+                                break;
+                            case "$SAQ$":
+                                //Marking a short answer question
+                                //Format is id$ans - where id is the id of the question and ans is the answer that is being checked.
+
+                                splittedStrings = receivedString.split("\\$");
+                                //get the id of the question
+                                id = Integer.parseInt(splittedStrings[0]);
+                                //get the answer of the user
+                                ans = splittedStrings[1];
+
+                                //get the actual question
+                                question = readQuestions.get(id);
+
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+
+                                int secondLastIndex = question.lastIndexOf("$", index-1);
+                                String[] paramsString = question.substring(secondLastIndex+1, index).split(",");
+
+                                Object params[] = new Object[paramsString.length];
+                                for (int i = 0; i < paramsString.length; i++){
+                                    params[i] = Integer.parseInt(paramsString[i]);
+                                }
+
+                                // replaces the --n with new line characters 
+                                ans = ans.replace("--n", "\n");
+                                ans = ans.replace("\\n", "\n");
+                                ans = ans.replace("\\t", "\t");
+                                correctAns = correctAns.replace("--n", "\n");
+                                correctAns = correctAns.replace("\\n", "\n");
+                                correctAns = correctAns.replace("\\t", "\t");
+
+                                String userAns = "";
+                                String actualAns = "";
+                                if (serverType == "Python"){ 
+                                    userAns = pythonTester(ans, params);
+                                    actualAns = pythonTester(correctAns, params);
+                                }
+                                else{
+                                    userAns = javaTester(ans,params.length, params);
+                                    File userFile = new File(String.format("./MyClass%d.java", counter));
+                                    userFile.delete();
+                                    File userFile2 = new File(String.format("./MyClass%d.class", counter));
+                                    userFile2.delete();
+
+                                    actualAns = javaTester(correctAns,params.length,params);
+                                    File actualFile = new File(String.format("./MyClass%d.java", counter));
+                                    actualFile.delete();
+                                    File actualFile2 = new File(String.format("./MyClass%d.class", counter));
+                                    actualFile2.delete();
+                                }
+                                System.out.println(String.format("hehrehrerehre %d",counter));
+                                File file = new File(String.format("./MyClass%d.java", counter));
+                                file.delete();
+                                File file2 = new File(String.format("./MyClass%d.class", counter));
+                                file2.delete();
+                                System.out.println("UserAns"+userAns);
+                                System.out.println("ActualAns"+actualAns);
+
+                                if (userAns.equals(actualAns)){
+                                    writer.println("correct");
+                                }
+                                else {
+                                    writer.println("wrong");
+                                }
+                                writer.flush();
+                                break;
+                            case "$ANS$":
+                                id = Integer.parseInt(receivedString);
+                                question = readQuestions.get(id);
+                                index = question.lastIndexOf("$");
+                                correctAns = question.substring(index+1);
+                                writer.println(correctAns);
+                                writer.flush(); 
+                                break;
+                    }
+                }
+
             }
 
             try {
                 writer.close();
                 reader.close();
-                clientSocket.close();
+                serverSocket.close();
                 scanner.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -150,55 +194,80 @@ public class QB {
         }
         serverSocket.close();
     }
-    
-    //python test method
-    public static String pythonTester(String codeString) {
-        // Python code to be executed
-        String pythonCode = codeString;
+
+    public static String pythonTester(String userCode, Object... parameter){ 
         try {
-            // Execute Python code using the Python interpreter
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "-c", pythonCode);
-            Process process = processBuilder.start();
-
-            // Read the output
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = reader.readLine();
-            return line;
-    
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "$F$";
+            // // Create a ProcessBuilder object to run the Python interpreter
+            ProcessBuilder pb = new ProcessBuilder("python", "-");
+            Process p = pb.start();
+            BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            // code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
+            String params = "";
+            for(Object x: parameter){
+                params += String.valueOf(x) + ",";
+            }
+            String code = userCode+ "\nprint(myMethod("+params+"))";
+            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3,2))";
+            p.getOutputStream().write(code.getBytes());
+            p.getOutputStream().close();
+            String output = out.readLine();
+            System.out.println(output);
+            p.waitFor();
+            System.out.println("RETURNED: " + output);
+            return output; 
+        } catch (IOException | InterruptedException e) {
+            return "";
         }
     }
 
-    public static String javaTester(String codeString){
-        // Java code to be executed
+    public static String javaTester(String userCode,int paramCount, Object... arguments) throws Exception {
         try{
-        String code = codeString;
+            // Gets the indexes of the left and right bracket
+            int bracketIndexLeft = userCode.indexOf('(');
+            int bracketIndexRight = userCode.indexOf(')');
 
-        // Create an in-memory Java file
-        String className = "MyClass";
-        String fileName = className + ".java";
-        String filePath = System.getProperty("user.dir") + "/" + fileName;
-        createFile(filePath, code); // Assume FileManager is a utility class to create files
+            // Gets the parameters from the user's code
+            String params = userCode.substring(bracketIndexLeft+1, bracketIndexRight);
+            int userParamCount = params.split(",").length;
+            // Checks if the number of parameters is correct
+            if (userParamCount != paramCount){
+                return "";
+            }   
 
-        // Compile the Java file
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        compiler.run(null, null, null, filePath);
+            // Create a unique class name to prevent past executions from being reused
+            String myClassDeclaration = String.format("public class MyClass%d {%s}", counter, userCode);
 
-        // Load the compiled class
-        Class<?> compiledClass = Class.forName(className);
+            // Compile the Java file
+            String fileName = "MyClass" + counter + ".java";
+            String filePath = "./" + fileName;
+            createFile(filePath, myClassDeclaration);
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            compiler.run(null, null, null, filePath);
 
-        // Invoke the method using reflection
-        Method method = compiledClass.getMethod("myMethod");
-        Object returnValue = method.invoke(null);
-        return String.valueOf(returnValue);
-        } catch (Exception e){
-            return "$F";
+            // Load the compiled class
+            Class<?> compiledClass = Class.forName(String.format("MyClass%d", counter));
+            Class<?>[] argList = new Class[paramCount];
+            Arrays.fill(argList, int.class);
+
+            // Get the myMethod() method
+            Method method = compiledClass.getMethod("myMethod", argList);
+
+            // Invoke the method using reflection
+            Object returnValue = method.invoke(null, arguments);
+            String theirAnswer = String.valueOf(returnValue);
+
+            File file = new File(filePath);
+            file.delete();
+            File file2 = new File(String.format("./MyClass%d.class", counter));
+            file2.delete();
+
+            counter++;
+
+            return theirAnswer;
+        }catch(Exception e){            
+            return "";
         }
-
     }
-
 
     public static void createFile(String filePath, String content) {
         try {
@@ -211,7 +280,6 @@ public class QB {
 
             // Write the content to the file
             java.nio.file.Files.write(file.toPath(), content.getBytes());
-            System.out.println("File created successfully at: " + filePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -248,12 +316,16 @@ public class QB {
         for (int i = 0; i < numQuestions; i++){
             int randomIndex = rand.nextInt(questionsList.size());
             String question = questionsList.get(randomIndex);
-            //gets the number of occurance of $
-            int count = question.length() - question.replace("$", "").length();
 
-            // if the number of $ isnt 3, then its a mcq, and the ans should be remvoed 
-            if (count != 3){
-                int index = question.lastIndexOf("$");
+            int index;
+            if (question.contains("$SA$")){
+                index = question.lastIndexOf("$");
+                question = question.substring(0,index); // Removing actual answer before sending it to QB
+                index = question.lastIndexOf("$");
+                question = question.substring(0,index); // Removing test cases answer before sending it to QB
+            }
+            else{
+                index = question.lastIndexOf("$");
                 question = question.substring(0,index); // Removing actual answer before sending it to QB
             }
             randomQuestions[i] = question;
