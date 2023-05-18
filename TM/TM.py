@@ -582,7 +582,8 @@ if __name__ == '__main__':
 
     # Call the function to retrieve the IP address
     ip = get_ip_address()
-    print("IP" + ip)
+    if ip not in HOST:
+        HOST.append(ip)
     print(HOST) # Print the IP addresses of the device running the server
 
     # Set the ports
