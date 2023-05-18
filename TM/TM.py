@@ -621,5 +621,5 @@ if __name__ == '__main__':
     port = 5000
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, MyHTTPRequestHandler) # Use ThreadingHTTPServer to allow multiple users to connect to the server
-    print('Starting httpd on port', port)
+    print('Quiz Website is running on port:', port)
     httpd.serve_forever()
