@@ -1,6 +1,6 @@
 import socket
 import select
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler # TODO: Maybe we dont need threads. We could just use HTTPServer
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import unquote, urlparse, parse_qs
 from sys import argv
 import random
@@ -610,8 +610,6 @@ if __name__ == '__main__':
     print(f"Java client connected from {java_addr[0]}")
     print(f"Python client connected from {python_addr[0]}")
     
-
-    # TODO: Probably don't need to set the sockets to non-blocking
     # Set the sockets to non-blocking
     javaQB.setblocking(False)
     pythonQB.setblocking(False)
