@@ -565,6 +565,24 @@ if __name__ == '__main__':
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
     HOST = socket.gethostbyname_ex(socket.gethostname())[-1] # IP for device running Java QB and running Python QB
+    def get_ip_address():
+        # Create a socket object
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        try:
+            # Connect to a public DNS server (Google DNS)
+            s.connect(("8.8.8.8", 80))
+            # Get the socket's IP address
+            ip_address = s.getsockname()[0]
+        finally:
+            # Close the socket
+            s.close()
+
+        return ip_address
+
+    # Call the function to retrieve the IP address
+    ip = get_ip_address()
+    print("IP" + ip)
     print(HOST) # Print the IP addresses of the device running the server
 
     # Set the ports
