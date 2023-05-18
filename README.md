@@ -2,8 +2,9 @@
 CITS3002 Project for Semester 1 2023
 
 To run the program:
-1) > javac QB.java
-2) > java QB -p
-3) > java QB -j
-4) > python TM.py [IP address of the machine QB is running on]
-5) > go to [IP address of the machine QB is running on]:5000
+1) > make
+2) > python3 TM.py
+    >> Should print an IP address [IP]
+2) > java QB -p [IP]
+3) > java QB -j [IP]
+

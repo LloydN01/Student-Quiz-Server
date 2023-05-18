@@ -244,7 +244,8 @@ def generateQuestionsHTML(questionPacket, username, additionalContent = ""):
         content += multipleChoice(index, questionBody, options, username, questionLang + questionNum)
     elif questionType == "SA":
         # If question is short answer
-        questionBody = "Create a " + questionLang + " function called myMethod taking the necessary number of parameters and providing the appropriate functionality:<br>"
+        qBrief = " public, static " + questionLang if questionLang=="Java" else questionLang
+        questionBody = "Create a " + qBrief + " function called myMethod taking the necessary number of parameters and providing the appropriate functionality:<br>"
         questionBody += question
         content += shortAnswer(index, questionBody, username, questionLang + questionNum)
 
