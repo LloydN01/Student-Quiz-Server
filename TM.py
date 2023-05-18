@@ -563,8 +563,8 @@ if __name__ == '__main__':
 
     # Convert login details to python dictionaries
     loginDict = ast.literal_eval(loginInfo)
-    HOST = socket.gethostbyname_ex(socket.gethostname())[-1][-1] # IP for device running Java QB and running Python QB
-    print(HOST) # Print the IP address of the device running the server
+    HOST = socket.gethostbyname_ex(socket.gethostname())[-1] # IP for device running Java QB and running Python QB
+    print(HOST) # Print the IP addresses of the device running the server
 
     # Set the ports
     JAVA_PORT = 9999
@@ -575,8 +575,8 @@ if __name__ == '__main__':
     pythonQB = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Makes the servers
-    javaQB.bind((HOST,JAVA_PORT))
-    pythonQB.bind((HOST,PYTHON_PORT))
+    javaQB.bind(('',JAVA_PORT))
+    pythonQB.bind(('',PYTHON_PORT))
 
     # Listen for a QB to connect to each socket
     javaQB.listen(1)
