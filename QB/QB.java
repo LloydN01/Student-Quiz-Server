@@ -31,9 +31,9 @@ public class QB {
         try {
             serverSocket = new Socket(ip_address,port); // set port number
             // Print Server Port Number
-            System.out.println(serverType + " Server is listening on port " + port);
+            System.out.println(serverType + " Client is connected to port " + port);
         } catch (IOException e) {
-            System.err.println("Could not listen on port: "+port);
+            System.err.println("Could not connect to port: "+port);
             System.exit(-1);
         }
 
@@ -123,7 +123,7 @@ public class QB {
                                     params[i] = Integer.parseInt(paramsString[i]);
                                 }
 
-                                // replaces the --n with new line characters 
+                                // replace --n with \n and \t with tab
                                 ans = ans.replace("--n", "\n");
                                 ans = ans.replace("\\n", "\n");
                                 ans = ans.replace("\\t", "\t");
@@ -131,8 +131,8 @@ public class QB {
                                 correctAns = correctAns.replace("\\n", "\n");
                                 correctAns = correctAns.replace("\\t", "\t");
 
-                                String userAns = "";
-                                String actualAns = "";
+                                String userAns = ""; // user's answer
+                                String actualAns = ""; // actual answer
                                 if (serverType == "Python"){ 
                                     userAns = pythonTester(ans, params.length, params);
                                     actualAns = pythonTester(correctAns, params.length, params);
@@ -156,19 +156,22 @@ public class QB {
                                 file2.delete();
 
                                 if (userAns.equals(actualAns)){
+                                    // If the answer is correct send correct to the TM
                                     writer.println("correct");
                                 }
                                 else {
+                                    // If the answer is wrong send wrong to the TM
                                     writer.println("wrong");
                                 }
                                 writer.flush();
                                 break;
                             case "$ANS$":
+                                // When TM requests the answer of a question
                                 id = Integer.parseInt(receivedString);
                                 question = readQuestions.get(id);
                                 index = question.lastIndexOf("$");
                                 correctAns = question.substring(index+1);
-                                writer.println(correctAns);
+                                writer.println(correctAns); // send the correct answer to the TM
                                 writer.flush(); 
                                 break;
                     }
@@ -177,6 +180,7 @@ public class QB {
             }
 
             try {
+                // Close all the connections
                 writer.close();
                 reader.close();
                 serverSocket.close();
@@ -187,25 +191,26 @@ public class QB {
 
             break;
         }
-        serverSocket.close();
+        serverSocket.close(); // close the server socket
     }
 
+    // Execute the python code and return the output
     public static String pythonTester(String userCode, int paramCount, Object... parameter) throws Exception { 
         try {
             // Checks if the number of parameters is correct
             if (!isCorrectNumberOfParameter(userCode, paramCount)){ return ""; }
 
-            // // Create a ProcessBuilder object to run the Python interpreter
+            // Create a ProcessBuilder object to run the Python interpreter
             ProcessBuilder pb = new ProcessBuilder("python", "-");
             Process p = pb.start();
             BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            // code = "def func_one("+params+"):\n  return a + b\n\nprint(func_one("+call+"))";
+
             String params = "";
             for(Object x: parameter){
                 params += String.valueOf(x) + ",";
             }
             String code = userCode+ "\nprint(myMethod("+params+"))";
-            // code = "def func_one(a,b):\n  return a + b\n\nprint(func_one(3,2))";
+
             p.getOutputStream().write(code.getBytes());
             p.getOutputStream().close();
             String output = out.readLine();
@@ -216,6 +221,7 @@ public class QB {
         }
     }
 
+    // Execute the java code and return the output
     public static String javaTester(String userCode,int paramCount, Object... arguments) throws Exception {
         try{
             // Checks if the number of parameters is correct
@@ -243,12 +249,13 @@ public class QB {
             Object returnValue = method.invoke(null, arguments);
             String theirAnswer = String.valueOf(returnValue);
 
+            // Delete the files
             File file = new File(filePath);
             file.delete();
             File file2 = new File(String.format("./MyClass%d.class", counter));
             file2.delete();
 
-            counter++;
+            counter++; // increment the counter -> for unqiue class names
 
             return theirAnswer;
         }catch(Exception e){            
@@ -256,6 +263,7 @@ public class QB {
         }
     }
 
+    // Checks if the number of parameters is correct
     public static void createFile(String filePath, String content) {
         try {
             File file = new File(filePath);
