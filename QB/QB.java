@@ -209,7 +209,7 @@ public class QB {
             if (!isCorrectNumberOfParameter(userCode, paramCount)){ return ""; }
 
             // Create a ProcessBuilder object to run the Python interpreter
-            ProcessBuilder pb = new ProcessBuilder("python", "-");
+            ProcessBuilder pb = new ProcessBuilder("python3", "-");
             Process p = pb.start();
             BufferedReader out = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
