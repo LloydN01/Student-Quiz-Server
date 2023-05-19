@@ -1,5 +1,5 @@
 MC$What is the output of the following code snippet in Java?<br>int num1 = 10;<br>int num2 = 5;<br>System.out.println(num1/num2);$2.5/2/5/0.5$2
-MC$Which of the following is NOT a valid keyword in Java?$private/protected/unsigned/final$protected
+MC$Which of the following is NOT a valid keyword in Java?$private/protected/unsigned/final$unsigned
 MC$What is the difference between == and equals() method in Java?$both are used to compare two objects in Java./== compares the reference while equals() compares the values of two objects./equals() compares the reference while == compares the values of two objects./There is no difference between == and equals() method.$== compares the reference while equals() compares the values of two objects.
 MC$What type of programming language is Java?$Code/English/Object-oriented/Function Oriented$Object-oriented
 MC$How would you utilise this class to grab its "number" value?<br>public class object(){<br>    Public Int number = 23;<br>    Public String numbers = "38";<br>}<br>Object g = new Object()$g.get(number)/g.number/g.int(number)/get(g).number$g.number
