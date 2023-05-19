@@ -7,4 +7,4 @@ To run the program:
     >> Should print an IP address [IP]
 2) > java QB -p [IP]
 3) > java QB -j [IP]
-
+4) The students taking the test can access the Quiz Website via the IP address of the TM

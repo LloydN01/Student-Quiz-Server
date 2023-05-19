@@ -6,13 +6,15 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.lang.reflect.Method;
 
+// Class for the QB
 public class QB {
-    public static int port;
-    public static String serverType;
-    public static String locationOfQuestionFiles = "./Questions/";
+    public static int port; // Port number
+    public static String serverType; // Server type (Python or Java)
+    public static String locationOfQuestionFiles = "./Questions/"; // Location of question files
     public static int counter = 0; // Counter for javaTester() function
 
     public static void main(String[] args) throws Exception {
+        // Check if the user has executed the python or java QB
         if (args[0].equals("-p")){
             port = 9998;
             serverType = "Python";
@@ -21,12 +23,12 @@ public class QB {
             port = 9999;
             serverType = "Java";
         }
-        String ip_address = args[1];
+        String ip_address = args[1]; // IP address of the TM
 
-        ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt");
+        ArrayList<String> readQuestions = readFile(locationOfQuestionFiles + serverType + "Questions.txt"); // Read questions from file
 
-        Socket serverSocket = null;
-        boolean listening = true;
+        Socket serverSocket = null; // Socket for the server
+        boolean listening = true; // Boolean for listening
 
         try {
             serverSocket = new Socket(ip_address,port); // set port number
@@ -46,6 +48,7 @@ public class QB {
                 // Read from client
                 String receivedString = reader.readLine(); //reads a line of text until it encounters a '\n' or '\r' and then adds it to receievedString
                 if (receivedString.equals("PING")){
+                    // PING PONG system. Send PONG back to TM
                     writer.println("PONG");
                     writer.flush();
                 }
@@ -138,6 +141,11 @@ public class QB {
                                     actualAns = pythonTester(correctAns, params.length, params);
                                 }
                                 else{
+                                    // javaTester() function is used to compile and run the java code
+                                    // A new java file is created for each invokation by adding the counter to the file name
+                                    // This is to prevent the residual java files from previous invokations from affecting the current invokation
+                                    // Delete the java file and class file after each invokation
+                                    
                                     userAns = javaTester(ans, params.length, params);
                                     File userFile = new File(String.format("./MyClass%d.java", counter));
                                     userFile.delete();
