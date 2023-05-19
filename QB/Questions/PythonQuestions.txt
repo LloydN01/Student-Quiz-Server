@@ -4,7 +4,7 @@ MC$What is the ouput of the following code:<br>def function(n):<br>	n = n**2<br>
 MC$What will be the output of the following code snippet in Python?<br>list1 = [1, 2, 3, 4, 5]<br>list2 = list1[2:4]<br>print(list2)$[1, 2]/[2, 3]/[3, 4]/[4, 5]$[3, 4]
 MC$Which of the following is NOT a valid data type in Python?$Tuple/Set/Char/Dictionary$Char
 MC$What is the output of the following code snippet in Python?<br>for i in range(1, 5):<br>    	if i == 3:<br>        	continue<br>    	print(i)$1, 2, 3, 4/1, 2, 4/2, 3, 4/1, 3, 4$1, 2, 4
-MC$What value is printed by the print statement?<br>a = [[1,2],[3,4],[5,[6,7]]]<br>print(a[2][1][1])$6,/3/5/7$7
+MC$What value is printed by the print statement?<br>a = [[1,2],[3,4],[5,[6,7]]]<br>print(a[2][1][1])$6/3/5/7$7
 MC$What value results from this expression?<br>(7%5)*2$4/6/60/Error$4
 MC$What type of value is "2.01" in python?$float/integer/string/double$string
 MC$Which of the following is a set?$["a","b","c"]/{"first" : "a", "second": "b", "third" : "b"}/{"a", "b", "c"}/("a", "b", "c")${"a", "b", "c"}
