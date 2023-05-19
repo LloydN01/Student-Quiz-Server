@@ -8,6 +8,8 @@ To run the program, start in the main directory and run:
 2. Open new terminals. You will need one terminal for the TM, and one each for the QBs.
    Each directory also contains a readme reiterating these ideas.
 
+For pythonTester() to work in QB.java, python3 needs to be installed on device
+
 ## TM
 
 1. Change directory to TM: `cd TM`
