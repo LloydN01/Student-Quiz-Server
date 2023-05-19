@@ -152,11 +152,11 @@ def login_page():
 def index_page(username):
     content = "<html><head><title>localhost</title></head>"
     content += "<body>"
-    content += "<h1>Welcome {}</h1>".format(username)
+    content += "<h1>Welcome <b>{}</b></h1>".format(username)
     content += "<form method='get'>"
     content += "<input type='submit' name='logout' value='Logout'>"
     content += "</form>"
-    content += "<p>Click to get 5 random questions.</p>"
+    content += "<p>Click to get 10 random questions.</p>"
     content += "<form method='get'>"
     content += "<input type='submit' name='get-questions' value='Randomise'>"
 
